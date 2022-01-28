@@ -1,0 +1,11 @@
+version: '3.7'
+services:
+  bot:
+    build: .
+    environment:
+      - TOKEN=your_discord_bot_token
+      - LOG_LEVEL=info
+    extra_hosts:
+      - "gpcm.gamespy.com:127.0.0.1"
+      - "gpsp.gamespy.com:127.0.0.1"
+      - "battlefield2.available.com:127.0.0.1"
