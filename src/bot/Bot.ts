@@ -153,6 +153,11 @@ class Bot {
             const players = resp.data;
             this.status.onServer = players.some((p: any) => p?.name == this.config.nickname);
             this.status.onServerLastCheckedAt = moment();
+
+            if (this.status.onServer) {
+                this.status.lastSeenOnServerAt = moment();
+            }
+
             updateOk = true;
         }
         catch (e: any) {

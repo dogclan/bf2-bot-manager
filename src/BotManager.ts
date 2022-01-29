@@ -179,7 +179,10 @@ class BotManager {
             else if (status.enabled && !status.onServer && !status.botRunning) {
                 this.logger.info('Bot not on server, will check again', config.server.name, config.slot, config.nickname);
             }
-            else if (status.enabled && !status.onServer && status.botRunning && moment().diff(status.processStartedAt, 'seconds') > Config.BOT_JOIN_TIMEOUT) {
+            else if (status.enabled && !status.onServer && status.botRunning
+                && moment().diff(status.processStartedAt, 'seconds') > Config.BOT_JOIN_TIMEOUT
+                && (!status.lastSeenOnServerAt || moment().diff(status.lastSeenOnServerAt, 'seconds') > Config.BOT_ON_SERVER_TIMEOUT)
+            ) {
                 this.logger.info('Bot not on server, killing until next iteration', config.server.name, config.slot, config.nickname);
 
                 // Update nickname to avoid server "shadow banning" account by name
