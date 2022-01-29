@@ -1,9 +1,11 @@
 import axios from 'axios';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
+import moment from 'moment';
 import { Logger } from 'tslog';
 import logger from '../logger';
 import { sleep } from '../utility';
 import BotConfig from './BotConfig';
+import { BotStatus } from './typing';
 
 type BotExeCommand = 'start' | 'stop'
 
@@ -13,33 +15,46 @@ class Bot {
     private logger: Logger;
     private process?: ChildProcessWithoutNullStreams;
 
-    private processLaunched = false;
-    private cliReady = false;
-    private botRunning = false;
+    private status: BotStatus;
 
-    constructor(config: BotConfig) {
+    constructor(config: BotConfig, enabled: boolean) {
         this.config = config;
+
         this.logger = logger.getChildLogger({ name: 'BotLogger' });
+
+        this.status = {
+            enabled: enabled,
+            processRunning: false,
+            botRunning: false,
+            cliReady: false
+        };
 
         // Kill child process when parent exists in order to not leave zombie processes behind
         process.on('exit', () => {
-            this.process?.kill();
+            this.kill();
         });
 
         process.on('SIGINT', () => {
             console.log('SIGINT');
-            this.process?.kill();
+            this.stop();
+            this.kill();
             process.exit();
         });
 
         process.on('SIGTERM', () => {
             console.log('SIGTERM');
-            this.process?.kill();
+            this.stop();
+            this.kill();
             process.exit();
         });
     }
 
     public launch(): void {
+        if (!this.status.enabled) {
+            this.logger.warn(this.config.nickname, 'currently disabled, will not launch');
+            return;
+        }
+
         this.process = spawn('wine', ['bots.exe'], {
             cwd: this.config.cwd,
             detached: false,
@@ -48,12 +63,14 @@ class Bot {
 
         this.process.on('spawn', () => {
             this.logger.debug(this.config.nickname, 'process launched successfully');
-            this.processLaunched = true;
+            this.status.processRunning = true;
+            this.status.processStartedAt = moment();
         });
 
         this.process.on('exit', (code, signal) => {
             this.logger.debug(this.config.nickname, `exited with code ${code} and signal ${signal}`);
-            this.processLaunched = false;
+            this.status.processRunning = false;
+            this.status.processStartedAt = undefined;
         });
 
         this.process.stdout.on('data', (data: Buffer) => {
@@ -66,18 +83,20 @@ class Bot {
                 }
             }
 
-            if (!this.cliReady && String(data).endsWith('> ')) {
+            if (!this.status.cliReady && String(data).endsWith('> ')) {
                 this.logger.debug(this.config.nickname, 'cli is ready');
-                this.cliReady = true;
+                this.status.cliReady = true;
             }
 
-            if (!this.botRunning && String(data).includes('started successfully')) {
+            if (!this.status.botRunning && String(data).includes('started successfully')) {
                 this.logger.info(this.config.nickname, 'started successfully');
-                this.botRunning = true;
+                this.status.botRunning = true;
+                this.status.botStartedAt = moment();
             }
-            else if (this.botRunning && String(data).includes('stopped successfully')) {
+            else if (this.status.botRunning && String(data).includes('stopped successfully')) {
                 this.logger.info(this.config.nickname, 'stopped successfully');
-                this.botRunning = false;
+                this.status.botRunning = false;
+                this.status.botStartedAt = undefined;
             }
         });
 
@@ -88,9 +107,11 @@ class Bot {
 
     public kill(): boolean {
         if (this.process && !this.process.killed && this.process.kill()) {
-            this.cliReady = false;
-            this.botRunning = false;
-            this.processLaunched = false;
+            this.status.cliReady = false;
+            this.status.botRunning = false;
+            this.status.botStartedAt = undefined;
+            this.status.processRunning = false;
+            this.status.processStartedAt = undefined;
             return true;
         }
 
@@ -100,7 +121,7 @@ class Bot {
     public async relaunch(): Promise<void> {
         this.kill();
 
-        while (this.processLaunched) {
+        while (this.status.processRunning) {
             await sleep(1000);
         }
 
@@ -117,18 +138,33 @@ class Bot {
         // TODO Relaunch if running
     }
 
+    public async updateStatus(): Promise<boolean> {
+        let updateOk: boolean;
+        try {
+            const resp = await axios.get(`https://api.bflist.io/bf2/v1/servers/${this.config.server.address}:${this.config.server.port}/players`);
+            const players = resp.data;
+            this.status.onServer = players.some((p: any) => p?.name == this.config.nickname);
+            this.status.onServerLastCheckedAt = moment();
+            updateOk = true;
+        }
+        catch (e: any) {
+            this.logger.error(this.config.nickname, 'failed to determine whether bot is on server', e.message);
+            updateOk = false;
+        }
+        
+        return updateOk;
+    }
+
+    public getStatus(): BotStatus {
+        return this.status;
+    }
+
     public isLaunched(): boolean {
-        return this.processLaunched;
+        return this.status.processRunning;
     }
 
     public isBotRunning(): boolean {
-        return this.botRunning;
-    }
-
-    public async isOnServer(): Promise<boolean> {
-        const resp = await axios.get(`https://api.bflist.io/bf2/v1/servers/${this.config.server.address}:${this.config.server.port}/players`);
-        const players = resp.data;
-        return players.some((p: any) => p?.name == this.config.nickname);
+        return this.status.botRunning;
     }
 
     public start(): boolean {
@@ -136,6 +172,10 @@ class Bot {
     }
 
     public stop(): boolean {
+        if (!this.status.botRunning) {
+            return true;
+        }
+
         return this.sendCommand('stop');
     }
 
@@ -146,7 +186,7 @@ class Bot {
             return false;
         }
 
-        while (!this.cliReady) {
+        while (!this.status.cliReady) {
             await sleep(1000);
         }
 
@@ -154,13 +194,13 @@ class Bot {
     }
 
     private sendCommand(cmd: BotExeCommand): boolean {
-        if (this.process && this.cliReady) {
+        if (this.process && this.status.cliReady) {
             this.logger.debug(this.config.nickname, 'sending command to process via stdin: ', cmd);
             this.logger.debug(this.config.nickname, 'cli will be busy');
-            this.cliReady = false;
+            this.status.cliReady = false;
             return this.process.stdin.write(`${cmd}\n`);
         }
-        else if (this.process && !this.cliReady) {
+        else if (this.process && !this.status.cliReady) {
             this.logger.warn(this.config.nickname, 'cli is not ready, rejecting command', cmd);
             return false;
         }

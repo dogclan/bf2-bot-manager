@@ -124,26 +124,24 @@ class BotManager {
             const config = bot.getConfig();
             this.logger.debug('Checking whether bot is on server', config.server.name, config.slot, config.nickname);
 
-            let onServer: boolean;
-            try {
-                onServer = await bot.isOnServer();
-            }
-            catch (e: any) {
-                this.logger.error('Failed to determine whether bot is on server', config.server.name, config.slot, config.nickname, e.message);
+            const updateOk = await bot.updateStatus();
+
+            if (!updateOk) {
                 continue;
             }
             
-            if (!bot.isLaunched()) {
-                this.logger.info('Bot process not launched, relaunching', config.server.name, config.slot, config.nickname);
+            const status = bot.getStatus();
+            if (!status.processRunning) {
+                this.logger.info('Bot process not running, relaunching', config.server.name, config.slot, config.nickname);
                 await bot.relaunch();
 
                 // Give bot a few seconds before starting next one
                 await sleep(5000);
             }
-            else if (!onServer && !bot.isBotRunning()) {
+            else if (!status.onServer && !status.botRunning) {
                 this.logger.info('Bot not on server, will check again', config.server.name, config.slot, config.nickname);
             }
-            else if (!onServer && bot.isBotRunning()) {
+            else if (!status.onServer && status.botRunning) {
                 this.logger.info('Bot not on server, killing until next iteration', config.server.name, config.slot, config.nickname);
 
                 // Update nickname to avoid server "shadow banning" account by name
