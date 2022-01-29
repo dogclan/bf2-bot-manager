@@ -41,18 +41,18 @@ export const setEnabled: Command = {
         });
 
         let reply: string;
-        if (!manager.isBotLaunchComplete()) {
-            reply = `Not all bots have been launched yet. Please wait until bot launch is complete before enabling/disabling any bots.`
-        }
-        else if (!bot) {
+        if (!bot) {
             reply = `I do not manage a bot called "${options.botName}" on a server called "${options.serverName}". Maybe run /status once to check server and bot names?`;
+        }
+        else if (!manager.isBotLaunchComplete()) {
+            reply = `Not all bots have been launched yet. Please wait until bot launch is complete before enabling/disabling any bots.`
         }
         else if (bot.isEnabled() != options.enabled) {
             bot.setEnabled(options.enabled);
-            reply = `Ok, bot has been ${options.enabled ? 'enabled' : 'disabled'} and will ${options.enabled ? 'attempt to join' : 'leave'} the server shortly.`
+            reply = `Ok, ${options.botName} has been ${options.enabled ? 'enabled' : 'disabled'} and will ${options.enabled ? 'attempt to join' : 'leave'} ${options.serverName} shortly.`
         }
         else {
-            reply = `Um, bot already is ${options.enabled ? 'enabled' : 'disabled'}.`;
+            reply = `Um, ${options.botName} already is ${options.enabled ? 'enabled' : 'disabled'}.`;
         }
         
         await interaction.reply(reply);
