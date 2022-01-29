@@ -74,6 +74,27 @@ class BotManager {
     }
 
     public async launchBots(): Promise<void> {
+        await this.initializeBotConfigs();
+
+        for (const bot of this.bots) {
+            const config = bot.getConfig();
+            try {
+                this.logger.debug('Launching bot process for slot', config.slot, config.nickname);
+                bot.launch();
+
+                // Give bot a few seconds before starting next one
+                await sleep(45000);
+            }
+            catch (e: any) {
+                this.logger.error('Failed to launch bot process for slot', config.slot, config.nickname, e.message);
+            }
+        }
+
+        // Start maintenance task
+        this.tasks.monitoringTask.start();
+    }
+
+    private async initializeBotConfigs(): Promise<void> {
         for (const serverWithBots of Config.SERVERS) {
             const {bots: bots, ...server} = serverWithBots;
             this.logger.info('Launching bots for', server.name);
@@ -93,24 +114,9 @@ class BotManager {
                     this.logger.error('Failed to set up running folder for slot', config.slot, config.nickname, e.message);
                 }
                 
-                const bot = new Bot(config);
-                this.bots.push(bot);
-
-                try {
-                    this.logger.debug('Launching bot process for slot', config.slot, config.nickname);
-                    bot.launch();
-
-                    // Give bot a few seconds before starting next one
-                    await sleep(45000);
-                }
-                catch (e: any) {
-                    this.logger.error('Failed to launch bot process for slot', config.slot, config.nickname, e.message);
-                }
+                this.bots.push(new Bot(config, true));
             }
         }
-
-        // Start maintenance task
-        this.tasks.monitoringTask.start();
     }
 
     private async maintainBots(): Promise<void> {
