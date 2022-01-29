@@ -94,6 +94,7 @@ class BotManager {
 
                 // Give bot a few seconds before starting next one
                 await sleep(45000);
+                await bot.updateStatus();
             }
             catch (e: any) {
                 this.logger.error('Failed to launch bot process for slot', config.slot, config.nickname, e.message);
