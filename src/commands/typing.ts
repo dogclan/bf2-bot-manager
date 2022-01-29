@@ -11,7 +11,7 @@ export type Columns = {
     bot: Column
     running: Column
     onServer: Column
-    asOf: Column
+    lastChecked: Column
 }
 
 export type Column = {

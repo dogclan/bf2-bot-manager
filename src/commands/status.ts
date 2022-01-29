@@ -54,9 +54,9 @@ async function formatStatusList(bots: Bot[], botLaunchComplete: boolean, serverN
             heading: 'On server',
             width: 9
         },
-        asOf: {
-            heading: 'As of',
-            width: 5
+        lastChecked: {
+            heading: 'Last checked',
+            width: 17
         }
     };
 
@@ -69,7 +69,7 @@ async function formatStatusList(bots: Bot[], botLaunchComplete: boolean, serverN
         const column = columns[key];
 
         // Add three spaces of padding between tables
-        column.width = key == 'asOf' ? column.width : column.width + 3;
+        column.width = key == 'lastChecked' ? column.width : column.width + 3;
 
         formatted += column.heading.padEnd(column.width, ' ');
         totalWidth += column.width;
