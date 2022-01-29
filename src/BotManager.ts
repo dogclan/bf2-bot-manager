@@ -20,6 +20,8 @@ class BotManager {
     private logger: Logger;
 
     private bots: Bot[];
+    private botLaunchComplete: boolean
+
     private commands: Command[];
     private tasks: Tasks;
 
@@ -29,6 +31,7 @@ class BotManager {
         this.logger = logger.getChildLogger({ name: 'BotManagerLogger' });
 
         this.bots = [];
+        this.botLaunchComplete = false;
 
         this.tasks = {
             monitoringTask: cron.schedule('*/4 * * * *', async () => {
@@ -99,6 +102,8 @@ class BotManager {
 
         // Start maintenance task
         this.tasks.monitoringTask.start();
+
+        this.botLaunchComplete = true;
     }
 
     private async initializeBotConfigs(): Promise<void> {
@@ -165,6 +170,10 @@ class BotManager {
 
     public getBots(): Bot[] {
         return this.bots;
+    }
+
+    public isBotLaunchComplete(): boolean {
+        return this.botLaunchComplete;
     }
 
     private async handleSlashCommand(interaction: CommandInteraction): Promise<void> {
