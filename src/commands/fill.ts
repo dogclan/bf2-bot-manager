@@ -37,7 +37,7 @@ export const fill: Command = {
             reply = `Ok, bots will join ${serverName} shortly.`;
         }
         else {
-            reply = 'Ok, pedal to the metal it is.'
+            reply = 'Ok, pedal to the metal it is.';
         }
 
         await interaction.reply(reply);

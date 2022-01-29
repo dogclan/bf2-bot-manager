@@ -38,11 +38,11 @@ export const setEnabled: Command = {
             serverName: interaction.options.getString('server', true),
             botName: interaction.options.getString('bot', true),
             enabled: interaction.options.getBoolean('enabled', true)
-        }
+        };
 
         const bot = manager.getBots().find((bot: Bot) => {
             const config = bot.getConfig();
-            return config.server.name == options.serverName && config.basename == options.botName
+            return config.server.name == options.serverName && config.basename == options.botName;
         });
 
         let reply: string;
@@ -51,7 +51,7 @@ export const setEnabled: Command = {
         }
         else if (bot.isEnabled() != options.enabled) {
             bot.setEnabled(options.enabled);
-            reply = `Ok, ${options.botName} has been ${options.enabled ? 'enabled' : 'disabled'} and will ${options.enabled ? 'attempt to join' : 'leave'} ${options.serverName} shortly.`
+            reply = `Ok, ${options.botName} has been ${options.enabled ? 'enabled' : 'disabled'} and will ${options.enabled ? 'attempt to join' : 'leave'} ${options.serverName} shortly.`;
         }
         else {
             reply = `Um, ${options.botName} already is ${options.enabled ? 'enabled' : 'disabled'}.`;

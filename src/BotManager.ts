@@ -29,7 +29,7 @@ class BotManager {
     private logger: Logger;
 
     private bots: Bot[];
-    private botLaunchComplete: boolean
+    private botLaunchComplete: boolean;
 
     private commands: Command[];
     private tasks: Tasks;
@@ -74,12 +74,12 @@ class BotManager {
         this.commands = [status, setEnabled, fill, clear];
 
         this.client.once('ready', async () => {
-            this.client.user?.presence.set({status: 'online'});
+            this.client.user?.presence.set({ status: 'online' });
 
             this.logger.info('Client is ready, registering commands');
             const commands = await this.client.application!.commands.set(this.commands);
-            
-            for (const [key, command] of commands.entries()) {
+
+            for (const command of commands.values()) {
                 for (const permissionSet of Config.COMMAND_PERMISSIONS) {
                     await command.permissions.set({ guild: permissionSet.guild, permissions: permissionSet.permissions });
                 }
@@ -129,7 +129,7 @@ class BotManager {
 
     private async initializeBotConfigs(): Promise<void> {
         for (const serverWithBots of Config.SERVERS) {
-            const {bots: bots, ...server} = serverWithBots;
+            const { bots: bots, ...server } = serverWithBots;
             this.logger.info('Launching bots for', server.name);
             for (const [slot, baseConfig] of bots.entries()) {
                 const config = new BotConfig(
@@ -138,7 +138,7 @@ class BotManager {
                     slot,
                     server
                 );
-                
+
                 try {
                     this.logger.debug('Setting up running folder for slot', config.slot, config.nickname);
                     await config.setup();
@@ -146,7 +146,7 @@ class BotManager {
                 catch (e: any) {
                     this.logger.error('Failed to set up running folder for slot', config.slot, config.nickname, e.message);
                 }
-                
+
                 this.bots.push(new Bot(config, true));
             }
         }
@@ -162,7 +162,7 @@ class BotManager {
             if (!updateOk) {
                 continue;
             }
-            
+
             const status = bot.getStatus();
             if (status.enabled && !status.processRunning) {
                 this.logger.info('Bot process not running, relaunching', config.server.name, config.slot, config.nickname);

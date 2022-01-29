@@ -1,8 +1,6 @@
-import { ApplicationCommandPermissionData } from 'discord.js';
 import fs from 'fs';
 import glob from 'glob';
 import { promisify } from 'util';
-import Config from './config';
 
 export const globAsync = promisify(glob.glob);
 export const mkdirAsync = promisify(fs.mkdir);
