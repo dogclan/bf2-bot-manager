@@ -49,3 +49,7 @@ export function sleep(ms: number, val?: any): Promise<any> {
         }, ms);
     });
 }
+
+export function booleanToEnglish(bool?: boolean): string {
+    return bool ? 'yes' : 'no';
+}
