@@ -37,7 +37,7 @@ export const clear: Command = {
             reply = `Ok, bots will leave ${serverName} shortly.`;
         }
         else {
-            reply = 'Ok, shutting it all down for now.'
+            reply = 'Ok, shutting it all down for now.';
         }
 
         await interaction.reply(reply);

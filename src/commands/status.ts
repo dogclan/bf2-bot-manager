@@ -1,7 +1,6 @@
 import { CommandInteraction } from 'discord.js';
 import { ApplicationCommandOptionTypes } from 'discord.js/typings/enums';
 import Bot from '../bot/Bot';
-import { BotStatus } from '../bot/typing';
 import BotManager from '../BotManager';
 import { booleanToEnglish } from '../utility';
 import { Columns, Command } from './typing';
@@ -96,7 +95,7 @@ async function formatStatusList(bots: Bot[], botLaunchComplete: boolean, serverN
     formatted += '```';
 
     if (!botLaunchComplete) {
-        formatted += `\n**Note:** Not all bots have been launched yet, meaning bot status may not be up to date.`;
+        formatted += '\n**Note:** Not all bots have been launched yet, meaning bot status may not be up to date.';
     }
 
     return formatted;

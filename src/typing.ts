@@ -1,4 +1,4 @@
-import { ApplicationCommandPermissionData } from "discord.js"
+import { ApplicationCommandPermissionData } from 'discord.js';
 
 export type BotServer = {
     name: string
