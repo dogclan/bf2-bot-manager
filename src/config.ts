@@ -42,10 +42,6 @@ export default abstract class Config {
                 { basename: 'Conventional', password: 'gas' },
                 { basename: 'CapablePear', password: 'gas' },
                 { basename: 'SealBrockett', password: 'gas' },
-                { basename: 'DragonNosy', password: 'gas' },
-                { basename: 'VanadiumFire', password: 'gas' },
-                { basename: 'AluminiumTin', password: 'gas' },
-                { basename: 'WaryMivonne', password: 'gas' },
             ],
         }, {
             name: 'promote-openspy',
