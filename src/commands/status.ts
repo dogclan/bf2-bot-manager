@@ -27,12 +27,12 @@ export const status: Command = {
         const basenames: string[] = bots.map((bot: Bot) => bot.getConfig().basename);
         const statuses: BotStatus[] = bots.map((bot: Bot) => bot.getStatus());
 
-        const reply = await formatStatusList(basenames, statuses);
+        const reply = await formatStatusList(basenames, statuses, manager.isBotLaunchComplete());
         await interaction.editReply(reply);
     }
 };
 
-async function formatStatusList(names: string[], statuses: BotStatus[]): Promise<string> {
+async function formatStatusList(names: string[], statuses: BotStatus[], botLaunchComplete: boolean): Promise<string> {
     if (statuses.length == 0) {
         return 'No bots are set up';
     }
@@ -89,6 +89,10 @@ async function formatStatusList(names: string[], statuses: BotStatus[]): Promise
 
     // End markdown embed
     formatted += '```';
+
+    if (!botLaunchComplete) {
+        formatted += `\n**Note:** Not all bots have been launched yet, meaning bot status may not be up to date.`;
+    }
 
     return formatted;
 }
