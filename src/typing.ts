@@ -1,3 +1,5 @@
+import { ApplicationCommandPermissionData } from "discord.js"
+
 export type BotServer = {
     name: string
     address: string
@@ -12,4 +14,9 @@ export type ServerBotConfig = BotServer & {
 export type BotBaseConfig = {
     basename: string
     password: string
+}
+
+export type CommandPermissionSet = {
+    guild: string
+    permissions: ApplicationCommandPermissionData[]
 }
