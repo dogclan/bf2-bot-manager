@@ -24,24 +24,27 @@ export const status: Command = {
 
         const serverName = interaction.options.getString('server');
         const bots = manager.getBots().filter((bot: Bot) => !serverName || bot.getConfig().server.name == serverName);
-        const basenames: string[] = bots.map((bot: Bot) => bot.getConfig().basename);
-        const statuses: BotStatus[] = bots.map((bot: Bot) => bot.getStatus());
 
-        const reply = await formatStatusList(basenames, statuses, manager.isBotLaunchComplete());
+        const reply = await formatStatusList(bots, manager.isBotLaunchComplete(), serverName);
         await interaction.editReply(reply);
     }
 };
 
-async function formatStatusList(names: string[], statuses: BotStatus[], botLaunchComplete: boolean): Promise<string> {
-    if (statuses.length == 0) {
-        return 'No bots are set up';
+async function formatStatusList(bots: Bot[], botLaunchComplete: boolean, serverName: string | null): Promise<string> {
+    if (bots.length == 0) {
+        return serverName ? `Could not find any bots set up for a server called "${serverName}".`: 'No bots are set up.';
     }
 
-    const longestName = names.slice().sort((a, b) => a.length - b.length).pop();
+    const longestServerName = bots.slice().sort((a, b) => a.getConfig().server.name.length - b.getConfig().server.name.length).pop()?.getConfig().server.name;
+    const longestBotName = bots.slice().sort((a, b) => a.getConfig().basename.length - b.getConfig().basename.length).pop()?.getConfig().basename;
     const columns: Columns = {
-        name: {
-            heading: 'Name',
-            width: longestName?.length || 10
+        server: {
+            heading: 'Server',
+            width: longestServerName?.length || 10
+        },
+        bot: {
+            heading: 'Bot',
+            width: longestBotName?.length || 10
         },
         running: {
             heading: 'Enabled',
@@ -77,10 +80,12 @@ async function formatStatusList(names: string[], statuses: BotStatus[], botLaunc
     // Add separator
     formatted += `${'-'.padEnd(totalWidth, '-')}\n`;
 
-    for (let i = 0; i < names.length; i++) {
-        const name = names[i];
-        const status = statuses[i];
-        formatted += name.padEnd(columns.name.width, ' ');
+    for (const bot of bots) {
+        const config = bot.getConfig();
+        const status = bot.getStatus();
+
+        formatted += config.server.name.padEnd(columns.server.width, ' ');
+        formatted += config.basename.padEnd(columns.bot.width, ' ');
         formatted += booleanToEnglish(status.enabled).padEnd(columns.running.width);
         formatted += booleanToEnglish(status.onServer).padEnd(columns.onServer.width);
         formatted += status.onServerLastCheckedAt?.fromNow() || '';
