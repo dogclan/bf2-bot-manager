@@ -1,4 +1,5 @@
 import { Client, CommandInteraction, Intents, Interaction } from 'discord.js';
+import moment from 'moment';
 import cron from 'node-cron';
 import { Logger } from 'tslog';
 import Bot from './bot/Bot';
@@ -11,7 +12,12 @@ import logger from './logger';
 import { sleep } from './utility';
 
 type Tasks = {
-    monitoringTask: cron.ScheduledTask
+    maintenance: Task
+}
+
+type Task = {
+    running: boolean
+    schedule: cron.ScheduledTask
 }
 
 class BotManager {
@@ -35,18 +41,30 @@ class BotManager {
         this.botLaunchComplete = false;
 
         this.tasks = {
-            monitoringTask: cron.schedule('*/4 * * * *', async () => {
-                this.logger.debug('Running bot maintenance');
-                try {
-                    await this.maintainBots();
-                    this.logger.debug('Bot maintenance complete');
-                }
-                catch (e: any) {
-                    this.logger.error('Encountered an error during bot maintenance', e.message);
-                }
-            }, {
-                scheduled: false
-            })
+            maintenance: {
+                running: false,
+                schedule: cron.schedule('*/2 * * * *', async () => {
+                    if (this.tasks.maintenance.running) {
+                        this.logger.warn('Bot maintenance is alreay running, skipping');
+                        return;
+                    }
+
+                    this.logger.debug('Running bot maintenance');
+                    this.tasks.maintenance.running = true;
+                    try {
+                        await this.maintainBots();
+                        this.logger.debug('Bot maintenance complete');
+                    }
+                    catch (e: any) {
+                        this.logger.error('Encountered an error during bot maintenance', e.message);
+                    }
+                    finally {
+                        this.tasks.maintenance.running = false;
+                    }
+                }, {
+                    scheduled: false
+                })
+            }
         };
 
         this.client = new Client({ intents: [Intents.FLAGS.GUILDS] });
@@ -102,7 +120,7 @@ class BotManager {
         }
 
         // Start maintenance task
-        this.tasks.monitoringTask.start();
+        this.tasks.maintenance.schedule.start();
 
         this.botLaunchComplete = true;
     }
@@ -149,7 +167,7 @@ class BotManager {
                 await bot.relaunch();
 
                 // Give bot a few seconds before starting next one
-                await sleep(5000);
+                await sleep(15000);
             }
             else if (!status.enabled && status.processRunning) {
                 this.logger.info('Bot is disabled but process is running, stopping', config.server.name, config.slot, config.nickname);
@@ -159,7 +177,7 @@ class BotManager {
             else if (status.enabled && !status.onServer && !status.botRunning) {
                 this.logger.info('Bot not on server, will check again', config.server.name, config.slot, config.nickname);
             }
-            else if (status.enabled && !status.onServer && status.botRunning) {
+            else if (status.enabled && !status.onServer && status.botRunning && moment().diff(status.processStartedAt, 'seconds') > Config.BOT_JOIN_TIMEOUT) {
                 this.logger.info('Bot not on server, killing until next iteration', config.server.name, config.slot, config.nickname);
 
                 // Update nickname to avoid server "shadow banning" account by name

@@ -7,6 +7,7 @@ export default abstract class Config {
     static readonly RUNNING_DIR: string = path.join(Config.ROOT_DIR, 'running');
     static readonly LOG_LEVEL: string = process.env.LOG_LEVEL || 'info';
     static readonly TOKEN: string = process.env.TOKEN || '';
+    static readonly BOT_JOIN_TIMEOUT = process.env.BOT_JOIN_TIMEOUT || 180;
     static readonly COMMAND_PERMISSIONS: CommandPermissionSet[] = [
         {
             // statbits Discord
