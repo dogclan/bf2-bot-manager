@@ -138,6 +138,14 @@ class Bot {
         // TODO Relaunch if running
     }
 
+    public isEnabled(): boolean {
+        return this.status.enabled;
+    }
+
+    public setEnabled(enabled: boolean) : void {
+        this.status.enabled = enabled;
+    }
+
     public async updateStatus(): Promise<boolean> {
         let updateOk: boolean;
         try {

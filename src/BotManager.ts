@@ -3,6 +3,7 @@ import cron from 'node-cron';
 import { Logger } from 'tslog';
 import Bot from './bot/Bot';
 import BotConfig from './bot/BotConfig';
+import { setEnabled } from './commands/setEnabled';
 import { status } from './commands/status';
 import { Command } from './commands/typing';
 import Config from './config';
@@ -50,14 +51,13 @@ class BotManager {
 
         this.client = new Client({ intents: [Intents.FLAGS.GUILDS] });
 
-        this.commands = [status];
+        this.commands = [status, setEnabled];
 
         this.client.once('ready', async () => {
             this.client.user?.presence.set({status: 'online'});
 
             this.logger.info('Client is ready, registering commands');
             const commands = await this.client.application!.commands.set(this.commands);
-
             
             for (const [key, command] of commands.entries()) {
                 for (const permissionSet of Config.COMMAND_PERMISSIONS) {
@@ -144,17 +144,22 @@ class BotManager {
             }
             
             const status = bot.getStatus();
-            if (!status.processRunning) {
+            if (status.enabled && !status.processRunning) {
                 this.logger.info('Bot process not running, relaunching', config.server.name, config.slot, config.nickname);
                 await bot.relaunch();
 
                 // Give bot a few seconds before starting next one
                 await sleep(5000);
             }
-            else if (!status.onServer && !status.botRunning) {
+            else if (!status.enabled && status.processRunning) {
+                this.logger.info('Bot is disabled but process is running, stopping', config.server.name, config.slot, config.nickname);
+                bot.stop();
+                bot.kill();
+            }
+            else if (status.enabled && !status.onServer && !status.botRunning) {
                 this.logger.info('Bot not on server, will check again', config.server.name, config.slot, config.nickname);
             }
-            else if (!status.onServer && status.botRunning) {
+            else if (status.enabled && !status.onServer && status.botRunning) {
                 this.logger.info('Bot not on server, killing until next iteration', config.server.name, config.slot, config.nickname);
 
                 // Update nickname to avoid server "shadow banning" account by name
@@ -163,7 +168,7 @@ class BotManager {
                 bot.stop();
                 bot.kill();
             }
-            else {
+            else if (status.enabled && status.onServer) {
                 this.logger.debug('Bot on server', config.server.name, config.slot, config.nickname);
             }
         }
