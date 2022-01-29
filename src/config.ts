@@ -9,15 +9,19 @@ export default abstract class Config {
     static readonly TOKEN: string = process.env.TOKEN || '';
     static readonly COMMAND_PERMISSIONS: CommandPermissionSet[] = [
         {
+            // statbits Discord
             guild: '774680162415018004',
             permissions: [
+                // developer role
                 { id: '774730250772152382', type: 'ROLE', permission: true }
             ]
         },
         {
+            // =DOG= Discord
             guild: '643138640473489428',
             permissions: [
-                { id: '772409834343366676', type: 'ROLE', permission: true }
+                // server bot admin role
+                { id: '936992348846575666', type: 'ROLE', permission: true }
             ]
         }
     ]
