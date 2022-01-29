@@ -9,6 +9,7 @@ import { Columns, Command } from './typing';
 export const status: Command = {
     name: 'status',
     description: 'Show status of bots controlled by the manager',
+    defaultPermission: false,
     options: [
         {
             name: 'server',
