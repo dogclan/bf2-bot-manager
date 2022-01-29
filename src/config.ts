@@ -25,36 +25,37 @@ export default abstract class Config {
             ]
         }
     ]
-    static readonly SERVERS: ServerBotConfig[] = [{
-        name: 'promote-openspy',
-        address: '85.214.21.18',
-        port: 16567,
-        mod: 'mods/bf2',
-        bots: [
-            { basename: 'LucyFromLondon', password: 'gas' },
-            { basename: 'BushWacka', password: 'gas' },
-            { basename: 'SirMixAlot', password: 'gas' },
-            { basename: 'Hypnotic', password: 'gas' },
-            { basename: 'Congo|Natty', password: 'gas' },
-            { basename: 'Mmmmmmm', password: 'gas' },
-            { basename: 'Mohawkman', password: 'gas' },
-            { basename: 'Daves_Mate', password: 'gas' },
-        ],
-    },
-    {
-        name: 'dog-rotation',
-        address: '135.125.56.26',
-        port: 16472,
-        mod: 'mods/bf2',
-        bots: [
-            { basename: 'Extra|OrdiNarY', password: 'gas' },
-            { basename: 'Fr33|Da|Herb', password: 'gas' },
-            { basename: 'Well|Job.Inf', password: 'gas' },
-            { basename: 'Helitomas', password: 'gas' },
-            { basename: 'Marcus|Thebest', password: 'gas' },
-            { basename: 'Beer^Monster', password: 'gas' },
-            { basename: 'John_Wick', password: 'gas' },
-            { basename: 'Jane_Smith', password: 'gas' },
-        ],
-    }];
+    static readonly SERVERS: ServerBotConfig[] = [
+        {
+            name: 'dog-rotation',
+            address: '135.125.56.26',
+            port: 16472,
+            mod: 'mods/bf2',
+            bots: [
+                { basename: 'Extra|OrdiNarY', password: 'gas' },
+                { basename: 'Fr33|Da|Herb', password: 'gas' },
+                { basename: 'Well|Job.Inf', password: 'gas' },
+                { basename: 'Helitomas', password: 'gas' },
+                { basename: 'Marcus|Thebest', password: 'gas' },
+                { basename: 'Beer^Monster', password: 'gas' },
+                { basename: 'John_Wick', password: 'gas' },
+                { basename: 'Jane_Smith', password: 'gas' },
+            ],
+        }, {
+            name: 'promote-openspy',
+            address: '85.214.21.18',
+            port: 16567,
+            mod: 'mods/bf2',
+            bots: [
+                { basename: 'LucyFromLondon', password: 'gas' },
+                { basename: 'BushWacka', password: 'gas' },
+                { basename: 'SirMixAlot', password: 'gas' },
+                { basename: 'Hypnotic', password: 'gas' },
+                { basename: 'Congo|Natty', password: 'gas' },
+                { basename: 'Mmmmmmm', password: 'gas' },
+                { basename: 'Mohawkman', password: 'gas' },
+                { basename: 'Daves_Mate', password: 'gas' },
+            ],
+        },
+    ];
 }
