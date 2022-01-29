@@ -29,6 +29,11 @@ export const setEnabled: Command = {
         }
     ],
     execute: async (interaction: CommandInteraction, manager: BotManager) => {
+        if (!manager.isBotLaunchComplete()) {
+            await interaction.reply('Not all bots have been launched yet. Please wait until bot launch is complete before enabling/disabling any bots.');
+            return;
+        }
+
         const options = {
             serverName: interaction.options.getString('server', true),
             botName: interaction.options.getString('bot', true),
@@ -43,9 +48,6 @@ export const setEnabled: Command = {
         let reply: string;
         if (!bot) {
             reply = `I do not manage a bot called "${options.botName}" on a server called "${options.serverName}". Maybe run /status once to check server and bot names?`;
-        }
-        else if (!manager.isBotLaunchComplete()) {
-            reply = `Not all bots have been launched yet. Please wait until bot launch is complete before enabling/disabling any bots.`
         }
         else if (bot.isEnabled() != options.enabled) {
             bot.setEnabled(options.enabled);
