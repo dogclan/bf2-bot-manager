@@ -43,7 +43,7 @@ async function formatStatusList(names: string[], statuses: BotStatus[]): Promise
             width: longestName?.length || 10
         },
         running: {
-            heading: 'Running',
+            heading: 'Enabled',
             width: 7
         },
         onServer: {
@@ -80,7 +80,7 @@ async function formatStatusList(names: string[], statuses: BotStatus[]): Promise
         const name = names[i];
         const status = statuses[i];
         formatted += name.padEnd(columns.name.width, ' ');
-        formatted += booleanToEnglish(status.botRunning).padEnd(columns.running.width);
+        formatted += booleanToEnglish(status.enabled).padEnd(columns.running.width);
         formatted += booleanToEnglish(status.onServer).padEnd(columns.onServer.width);
         formatted += status.onServerLastCheckedAt?.fromNow() || '';
         formatted += '\n';
