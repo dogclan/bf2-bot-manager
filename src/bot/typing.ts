@@ -9,4 +9,5 @@ export type BotStatus = {
     processStartedAt?: moment.Moment
     botStartedAt?: moment.Moment
     onServerLastCheckedAt?: moment.Moment
+    lastSeenOnServerAt?: moment.Moment
 }
