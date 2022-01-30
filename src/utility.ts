@@ -21,7 +21,8 @@ export function getBotName(basename: string, currentName?: string): string {
 
     if (currentName) {
         const currentNumber = Number(currentName.split('^').pop());
-        delete numbers[currentNumber];
+        const index = numbers.indexOf(currentNumber);
+        numbers.splice(index, 1);
     }
 
     const newNumber = numbers[Math.floor(Math.random() * numbers.length)];
