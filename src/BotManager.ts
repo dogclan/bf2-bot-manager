@@ -177,7 +177,7 @@ class BotManager {
                 await bot.relaunch();
 
                 // Give bot a few seconds before starting next one
-                await sleep(15000);
+                await sleep(45000);
             }
             else if (!status.enabled && status.processRunning) {
                 this.logger.info('Bot is disabled but process is running, stopping', config.server.name, config.slot, config.nickname);
