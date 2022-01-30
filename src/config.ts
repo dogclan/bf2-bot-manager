@@ -9,6 +9,7 @@ export default abstract class Config {
     static readonly TOKEN: string = process.env.TOKEN || '';
     static readonly BOT_JOIN_TIMEOUT = process.env.BOT_JOIN_TIMEOUT || 300;
     static readonly BOT_ON_SERVER_TIMEOUT = process.env.BOT_ON_SERVER_TIMEOUT || 180;
+    static readonly BOT_STATUS_UPDATE_TIMEOUT = Number(process.env.BOT_STATUS_UPDATE_TIMEOUT) || 30;
     static readonly COMMAND_PERMISSIONS: CommandPermissionSet[] = [
         {
             // statbits Discord

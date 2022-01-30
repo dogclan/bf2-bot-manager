@@ -1,13 +1,18 @@
 import axios from 'axios';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import moment from 'moment';
+import cron from 'node-cron';
 import { Logger } from 'tslog';
 import logger from '../logger';
+import { Task } from '../typing';
 import { sleep } from '../utility';
 import BotConfig from './BotConfig';
 import { BotStatus } from './typing';
 
 type BotExeCommand = 'start' | 'stop'
+type BotTasks = {
+    statusUpdate: Task
+}
 
 class Bot {
     private config: BotConfig;
@@ -16,6 +21,8 @@ class Bot {
     private process?: ChildProcessWithoutNullStreams;
 
     private status: BotStatus;
+
+    private tasks: BotTasks
 
     constructor(config: BotConfig, enabled: boolean) {
         this.config = config;
@@ -28,6 +35,23 @@ class Bot {
             botRunning: false,
             cliReady: false
         };
+
+        this.tasks = {
+            statusUpdate: {
+                schedule: cron.schedule('10,30,50 * * * * *', async () => {
+                    this.logger.debug(this.config.nickname, 'updating on server status');
+                    try {
+                        await this.updateStatus();
+                        this.logger.debug(this.config.nickname, 'on server status update complete');
+                    }
+                    catch (e: any) {
+                        this.logger.error(this.config.nickname, 'encountered an error during bot on server status update', e.message);
+                    }
+                }, {
+                    scheduled: false
+                })
+            }
+        }
     }
 
     public launch(): void {
@@ -73,6 +97,7 @@ class Bot {
                 this.logger.info(this.config.nickname, 'started successfully');
                 this.status.botRunning = true;
                 this.status.botStartedAt = moment();
+                this.tasks.statusUpdate.schedule.start();
             }
             else if (this.status.botRunning && String(data).includes('stopped successfully')) {
                 this.logger.info(this.config.nickname, 'stopped successfully');
@@ -127,8 +152,7 @@ class Bot {
         this.status.enabled = enabled;
     }
 
-    public async updateStatus(): Promise<boolean> {
-        let updateOk: boolean;
+    public async updateStatus(): Promise<void> {
         try {
             const resp = await axios.get(`https://api.bflist.io/bf2/v1/servers/${this.config.server.address}:${this.config.server.port}/players`);
             const players = resp.data;
@@ -138,15 +162,10 @@ class Bot {
             if (this.status.onServer) {
                 this.status.lastSeenOnServerAt = moment();
             }
-
-            updateOk = true;
         }
         catch (e: any) {
             this.logger.error(this.config.nickname, 'failed to determine whether bot is on server', e.message);
-            updateOk = false;
         }
-        
-        return updateOk;
     }
 
     public getStatus(): BotStatus {
