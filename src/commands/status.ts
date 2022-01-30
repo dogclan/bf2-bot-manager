@@ -18,14 +18,11 @@ export const status: Command = {
         }
     ],
     execute: async (interaction: CommandInteraction, manager: BotManager) => {
-        // Status checks may take a second, so defer reply in order to keep interaction token valid
-        await interaction.deferReply();
-
         const serverName = interaction.options.getString('server');
         const bots = manager.getBots().filter((bot: Bot) => !serverName || bot.getConfig().server.name == serverName);
 
         const reply = await formatStatusList(bots, manager.isBotLaunchComplete(), serverName);
-        await interaction.editReply(reply);
+        await interaction.reply(reply);
     }
 };
 
