@@ -7,7 +7,6 @@ export interface Command extends ChatInputApplicationCommandData {
 
 export type Columns = {
     [key: string]: Column
-    server: Column
     bot: Column
     running: Column
     onServer: Column

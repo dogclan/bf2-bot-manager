@@ -2,6 +2,7 @@ import { CommandInteraction } from 'discord.js';
 import { ApplicationCommandOptionTypes } from 'discord.js/typings/enums';
 import Bot from '../bot/Bot';
 import BotManager from '../BotManager';
+import Server from '../server/Server';
 import { booleanToEnglish } from '../utility';
 import { Columns, Command } from './typing';
 
@@ -14,30 +15,35 @@ export const status: Command = {
             name: 'server',
             description: 'Server name to show status for',
             type: ApplicationCommandOptionTypes.STRING,
-            required: false
+            required: true
         }
     ],
     execute: async (interaction: CommandInteraction, manager: BotManager) => {
         const serverName = interaction.options.getString('server');
-        const bots = manager.getBots().filter((bot: Bot) => !serverName || bot.getConfig().server.name == serverName);
+        const server = manager.getServers().find((server: Server) => server.getConfig().name == serverName);
 
-        const reply = await formatStatusList(bots, manager.isBotLaunchComplete(), serverName);
+        if (!server) {
+            await interaction.reply( `I do not manage bots for a server called "${serverName}".`);
+            return;
+        }
+
+        const reply = await formatStatusList(server, manager.isBotLaunchComplete());
         await interaction.reply(reply);
     }
 };
 
-async function formatStatusList(bots: Bot[], botLaunchComplete: boolean, serverName: string | null): Promise<string> {
-    if (bots.length == 0) {
-        return serverName ? `Could not find any bots set up for a server called "${serverName}".`: 'No bots are set up.';
-    }
+async function formatStatusList(server: Server, botLaunchComplete: boolean): Promise<string> {
+    const config = server.getConfig();
 
-    const longestServerName = bots.slice().sort((a, b) => a.getConfig().server.name.length - b.getConfig().server.name.length).pop()?.getConfig().server.name;
+    let formatted = `**Server:** ${config.name}\n`;
+    formatted += `**Slots:** ${config.slots}${config.currentSlots != undefined ? ', temporarily changed to ' + config.currentSlots : ''}\n`;
+
+    const bots = server.getBots();
+
+    formatted += `**Bots on server:** ${bots.filter((b) => b.getStatus().onServer).length}\n\n`;
+
     const longestBotName = bots.slice().sort((a, b) => a.getConfig().basename.length - b.getConfig().basename.length).pop()?.getConfig().basename;
     const columns: Columns = {
-        server: {
-            heading: 'Server',
-            width: longestServerName?.length || 10
-        },
         bot: {
             heading: 'Bot',
             width: longestBotName?.length || 10
@@ -57,7 +63,7 @@ async function formatStatusList(bots: Bot[], botLaunchComplete: boolean, serverN
     };
 
     // Start markdown embed
-    let formatted = '```\n';
+    formatted += '```\n';
 
     // Add table headers
     let totalWidth = 0;
@@ -80,7 +86,6 @@ async function formatStatusList(bots: Bot[], botLaunchComplete: boolean, serverN
         const config = bot.getConfig();
         const status = bot.getStatus();
 
-        formatted += config.server.name.padEnd(columns.server.width, ' ');
         formatted += config.basename.padEnd(columns.bot.width, ' ');
         formatted += booleanToEnglish(status.enabled).padEnd(columns.running.width);
         formatted += booleanToEnglish(status.onServer).padEnd(columns.onServer.width);
