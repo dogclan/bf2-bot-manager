@@ -192,6 +192,13 @@ class Bot {
         return this.sendCommand('stop');
     }
 
+    public async waitForStop(): Promise<void> {
+        // cli should become ready again after stopping, so wait for that
+        while (!this.status.cliReady) {
+            await sleep(1000);
+        }
+    }
+
     public async restart(): Promise<boolean> {
         const stopped = this.stop();
 
@@ -199,9 +206,7 @@ class Bot {
             return false;
         }
 
-        while (!this.status.cliReady) {
-            await sleep(1000);
-        }
+        await this.waitForStop();
 
         return this.start();
     }
