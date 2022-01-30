@@ -34,6 +34,7 @@ export default abstract class Config {
             address: '135.125.56.26',
             port: 16472,
             mod: 'mods/bf2',
+            slots: 8,
             bots: [
                 { basename: 'HopefulRace', password: 'gas' },
                 { basename: 'ElyahouBeets', password: 'gas' },
@@ -49,6 +50,7 @@ export default abstract class Config {
             address: '85.214.21.18',
             port: 16567,
             mod: 'mods/bf2',
+            slots: 8,
             bots: [
                 { basename: 'LucyFromLondon', password: 'gas' },
                 { basename: 'BushWacka', password: 'gas' },
