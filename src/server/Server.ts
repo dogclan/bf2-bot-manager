@@ -14,7 +14,7 @@ class Server {
         return this.config;
     }
 
-    public setCurrentSlots(currentSlots: number): void {
+    public setCurrentSlots(currentSlots?: number): void {
         this.config.currentSlots = currentSlots;
     }
 

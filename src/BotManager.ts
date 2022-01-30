@@ -176,16 +176,38 @@ class BotManager {
 
     private async maintainBots(): Promise<void> {
         for (const server of this.servers) {
-            for (const bot of server.getBots()) {
+            const serverConfig = server.getConfig();
+            const slots = serverConfig.currentSlots != undefined ? serverConfig.currentSlots : serverConfig.slots;
+            const bots = server.getBots();
+            for (const bot of bots) {
                 const config = bot.getConfig();
                 const status = bot.getStatus();
     
                 if (moment().diff(status.onServerLastCheckedAt, 'seconds') > Config.BOT_STATUS_UPDATE_TIMEOUT) {
                     continue;
                 }
-    
+
+                const filledSlots = bots.filter((b: Bot) => b.getStatus().onServer && b.getStatus().enabled).length;
+                const enabledBots = bots.filter((b: Bot) => b.getStatus().enabled).length;
+                const maxPopulation = slots * Config.OVERPOPULATE_FACTOR
+                if (!bot.isEnabled() && filledSlots < slots && enabledBots < maxPopulation) {
+                    // Enable if desired number of slots is currently not filled on the server and overpulate max has not been reached yet
+                    this.logger.info(serverConfig.name, 'has slots to fill, enabling', config.nickname, slots, filledSlots, maxPopulation, enabledBots);
+                    bot.setEnabled(true);
+                }
+                else if (bot.isEnabled() && (filledSlots > slots || enabledBots > maxPopulation)) {
+                    // Disable if desired number of slots or overpopulate max has been exceeded
+                    this.logger.info(serverConfig.name, 'has to many slots filled/bots running, disabling', config.nickname, slots, filledSlots, maxPopulation, enabledBots);
+                    bot.setEnabled(false);
+                }
+                else if (bot.isEnabled() && !status.onServer && filledSlots == slots) {
+                    // Disable if bot is not on server but desired number of slots has been filled
+                    this.logger.info(serverConfig.name, 'is filled up, disabling', config.nickname, slots, filledSlots, maxPopulation, enabledBots);
+                    bot.setEnabled(false);
+                }
+
                 if (status.enabled && !status.processRunning) {
-                    this.logger.info('Bot process not running, relaunching', config.server.name, config.slot, config.nickname);
+                    this.logger.info('Bot process not running, (re-)launching', config.server.name, config.slot, config.nickname);
                     await bot.relaunch();
     
                     // Give bot a few seconds before starting next one
@@ -230,6 +252,10 @@ class BotManager {
                 bot.kill();
             }
         }
+    }
+
+    public getServers(): Server[] {
+        return this.servers;
     }
 
     public getBots(): Bot[] {

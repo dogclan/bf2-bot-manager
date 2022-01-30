@@ -10,6 +10,7 @@ export default abstract class Config {
     static readonly BOT_JOIN_TIMEOUT = Number(process.env.BOT_JOIN_TIMEOUT) || 300;
     static readonly BOT_ON_SERVER_TIMEOUT = Number(process.env.BOT_ON_SERVER_TIMEOUT) || 180;
     static readonly BOT_STATUS_UPDATE_TIMEOUT = Number(process.env.BOT_STATUS_UPDATE_TIMEOUT) || 30;
+    static readonly OVERPOPULATE_FACTOR = Number(process.env.OVERPOPULATE_FACTOR) || 2;
     static readonly COMMAND_PERMISSIONS: CommandPermissionSet[] = [
         {
             // statbits Discord
@@ -44,6 +45,14 @@ export default abstract class Config {
                 { basename: 'Conventional', password: 'gas' },
                 { basename: 'CapablePear', password: 'gas' },
                 { basename: 'SealBrockett', password: 'gas' },
+                { basename: 'AgedRace', password: 'gas' },
+                { basename: 'SaltyAdjeley', password: 'gas' },
+                { basename: 'ShootLeira', password: 'gas' },
+                { basename: 'Idolized', password: 'gas' },
+                { basename: 'BabyishToxic', password: 'gas' },
+                { basename: 'TotalPanther', password: 'gas' },
+                { basename: 'NoseThulium', password: 'gas' },
+                { basename: 'AtemoyaHuge', password: 'gas' },
             ],
         }, {
             name: 'promote-openspy',
@@ -52,14 +61,22 @@ export default abstract class Config {
             mod: 'mods/bf2',
             slots: 8,
             bots: [
-                { basename: 'LucyFromLondon', password: 'gas' },
-                { basename: 'BushWacka', password: 'gas' },
-                { basename: 'SirMixAlot', password: 'gas' },
-                { basename: 'Hypnotic', password: 'gas' },
-                { basename: 'Congo|Natty', password: 'gas' },
-                { basename: 'Mmmmmmm', password: 'gas' },
-                { basename: 'Mohawkman', password: 'gas' },
-                { basename: 'Daves_Mate', password: 'gas' },
+                { basename: 'ModestJicama', password: 'gas' },
+                { basename: 'SeatUlyssia', password: 'gas' },
+                { basename: 'LeanLudovika', password: 'gas' },
+                { basename: 'Convert', password: 'gas' },
+                { basename: 'GryphinWater', password: 'gas' },
+                { basename: 'BellElephant', password: 'gas' },
+                { basename: 'DutifulLean', password: 'gas' },
+                { basename: 'RomaineXray', password: 'gas' },
+                { basename: 'FlimsyUschi', password: 'gas' },
+                { basename: 'DoubleAbove', password: 'gas' },
+                { basename: 'EconomicsFox', password: 'gas' },
+                { basename: 'TylaishaSnow', password: 'gas' },
+                { basename: 'DavyJones', password: 'gas' },
+                { basename: 'XCaliber', password: 'gas' },
+                { basename: 'SlyBoat', password: 'gas' },
+                { basename: 'OORetirement', password: 'gas' },
             ],
         },
     ];

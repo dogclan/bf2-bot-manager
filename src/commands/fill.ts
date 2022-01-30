@@ -2,6 +2,7 @@ import { CommandInteraction } from 'discord.js';
 import { ApplicationCommandOptionTypes } from 'discord.js/typings/enums';
 import Bot from '../bot/Bot';
 import BotManager from '../BotManager';
+import Server from '../server/Server';
 import { Command } from './typing';
 
 export const fill: Command = {
@@ -18,26 +19,27 @@ export const fill: Command = {
     ],
     execute: async (interaction: CommandInteraction, manager: BotManager) => {
         if (!manager.isBotLaunchComplete()) {
-            await interaction.reply('Not all bots have been launched yet. Please wait until bot launch is complete before enabling/disabling any bots.');
+            await interaction.reply('Not all bots have been launched yet. Please wait until bot launch is complete before changing server settings.');
             return;
         }
 
         const serverName = interaction.options.getString('server');
-        const bots = manager.getBots().filter((bot: Bot) => !serverName || bot.getConfig().server.name == serverName);
+        const servers = manager.getServers().filter((server: Server) => !serverName || server.getConfig().name == serverName);
 
-        for (const bot of bots) {
-            bot.setEnabled(true);
+        for (const server of servers) {
+            // Manager will use default number of slots if currentSlots is undefined
+            server.setCurrentSlots(undefined);
         }
 
         let reply: string;
-        if (bots.length == 0) {
-            reply = serverName ? `Could not find any bots set up for a server called "${serverName}".`: 'No bots are set up.';
+        if (servers.length == 0) {
+            reply = serverName ? `I do not manage bots for a server called "${serverName}".`: 'No servers are set up.';
         }
         else if (serverName) {
             reply = `Ok, bots will join ${serverName} shortly.`;
         }
         else {
-            reply = 'Ok, pedal to the metal it is.';
+            reply = 'Ok, calling all hands on deck.';
         }
 
         await interaction.reply(reply);
