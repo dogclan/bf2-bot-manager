@@ -192,9 +192,14 @@ class Bot {
         return this.sendCommand('stop');
     }
 
-    public async waitForStop(): Promise<void> {
-        while (this.status.botRunning) {
+    public async waitForStop(maxSleeps: number = 5): Promise<void> {
+        let sleeps = 0;
+        while (this.status.botRunning && sleeps++ < maxSleeps) {
             await sleep(1000);
+        }
+
+        if (sleeps >= maxSleeps) {
+            this.logger.warn(this.config.nickname, 'failed to stop gracefully', maxSleeps);
         }
     }
 
