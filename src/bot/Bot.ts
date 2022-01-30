@@ -174,8 +174,7 @@ class Bot {
     }
 
     public async waitForStop(): Promise<void> {
-        // cli should become ready again after stopping, so wait for that
-        while (!this.status.cliReady) {
+        while (this.status.botRunning) {
             await sleep(1000);
         }
     }
