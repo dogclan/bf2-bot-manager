@@ -174,6 +174,8 @@ class BotManager {
             else if (!status.enabled && status.processRunning) {
                 this.logger.info('Bot is disabled but process is running, stopping', config.server.name, config.slot, config.nickname);
                 bot.stop();
+                await bot.waitForStop();
+
                 bot.kill();
             }
             else if (status.enabled && !status.onServer && !status.botRunning) {
@@ -189,6 +191,8 @@ class BotManager {
                 bot.rotateNickname();
 
                 bot.stop();
+                await bot.waitForStop();
+
                 bot.kill();
             }
             else if (status.enabled && status.onServer) {
