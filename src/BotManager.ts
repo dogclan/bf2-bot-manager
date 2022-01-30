@@ -42,6 +42,21 @@ class BotManager {
         this.bots = [];
         this.botLaunchComplete = false;
 
+        // Kill child process when parent exists in order to not leave zombie processes behind
+        process.on('exit', async () => {
+            await this.shutdownBots();
+        });
+
+        process.on('SIGINT', async () => {
+            await this.shutdownBots();
+            process.exit();
+        });
+
+        process.on('SIGTERM', async () => {
+            await this.shutdownBots();
+            process.exit();
+        });
+
         this.tasks = {
             maintenance: {
                 running: false,
@@ -198,6 +213,14 @@ class BotManager {
             else if (status.enabled && status.onServer) {
                 this.logger.debug('Bot on server', config.server.name, config.slot, config.nickname);
             }
+        }
+    }
+
+    public async shutdownBots(): Promise<void> {
+        for (const bot of this.bots) {
+            bot.stop();
+            await bot.waitForStop();
+            bot.kill();
         }
     }
 
