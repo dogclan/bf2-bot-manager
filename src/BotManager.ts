@@ -11,6 +11,7 @@ import { status } from './commands/status';
 import { Command } from './commands/typing';
 import Config from './config';
 import logger from './logger';
+import Server from './server/Server';
 import { Task } from './typing';
 import { sleep } from './utility';
 
@@ -24,7 +25,7 @@ class BotManager {
     private client: Client;
     private logger: Logger;
 
-    private bots: Bot[];
+    private servers: Server[];
     private botLaunchComplete: boolean;
 
     private commands: Command[];
@@ -35,7 +36,7 @@ class BotManager {
 
         this.logger = logger.getChildLogger({ name: 'BotManagerLogger' });
 
-        this.bots = [];
+        this.servers = [];
         this.botLaunchComplete = false;
 
         // Kill child process when parent exists in order to not leave zombie processes behind
@@ -117,18 +118,22 @@ class BotManager {
     public async launchBots(): Promise<void> {
         await this.initializeBotConfigs();
 
-        for (const bot of this.bots) {
-            const config = bot.getConfig();
-            try {
-                this.logger.debug('Launching bot process for slot', config.slot, config.nickname);
-                bot.launch();
-
-                // Give bot a few seconds before starting next one
-                await sleep(45000);
-                await bot.updateStatus();
-            }
-            catch (e: any) {
-                this.logger.error('Failed to launch bot process for slot', config.slot, config.nickname, e.message);
+        for (const server of this.servers) {
+            this.logger.info('Launching bots for', server.getConfig().name);
+            const bots = server.getBots().filter((bot: Bot) => bot.isEnabled());
+            for (const bot of bots) {
+                const config = bot.getConfig();
+                try {
+                    this.logger.debug('Launching bot process for slot', config.slot, config.nickname);
+                    bot.launch();
+    
+                    // Give bot a few seconds before starting next one
+                    await sleep(45000);
+                    await bot.updateStatus();
+                }
+                catch (e: any) {
+                    this.logger.error('Failed to launch bot process for slot', config.slot, config.nickname, e.message);
+                }
             }
         }
 
@@ -139,15 +144,17 @@ class BotManager {
     }
 
     private async initializeBotConfigs(): Promise<void> {
-        for (const serverWithBots of Config.SERVERS) {
-            const { bots: bots, ...server } = serverWithBots;
-            this.logger.info('Launching bots for', server.name);
-            for (const [slot, baseConfig] of bots.entries()) {
+        for (const serverBotConfig of Config.SERVERS) {
+            const { bots: baseConfigs, slots: slots, ...botServer } = serverBotConfig;         
+
+            this.logger.info('Preparing bots for', botServer.name);
+            const bots: Bot[] = [];
+            for (const [slot, baseConfig] of baseConfigs.entries()) {
                 const config = new BotConfig(
                     baseConfig.basename,
                     baseConfig.password,
                     slot,
-                    server
+                    botServer
                 );
 
                 try {
@@ -158,67 +165,75 @@ class BotManager {
                     this.logger.error('Failed to set up running folder for slot', config.slot, config.nickname, e.message);
                 }
 
-                this.bots.push(new Bot(config, true));
+                // Enable as many bots as the server has slots
+                const enabled = slot < slots;
+                bots.push(new Bot(config, enabled));
             }
+
+            this.servers.push(new Server({ name: botServer.name, slots }, bots));
         }
     }
 
     private async maintainBots(): Promise<void> {
-        for (const bot of this.bots) {
-            const config = bot.getConfig();
-            const status = bot.getStatus();
-
-            if (moment().diff(status.onServerLastCheckedAt, 'seconds') > Config.BOT_STATUS_UPDATE_TIMEOUT) {
-                continue;
-            }
-
-            if (status.enabled && !status.processRunning) {
-                this.logger.info('Bot process not running, relaunching', config.server.name, config.slot, config.nickname);
-                await bot.relaunch();
-
-                // Give bot a few seconds before starting next one
-                await sleep(45000);
-            }
-            else if (!status.enabled && status.processRunning) {
-                this.logger.info('Bot is disabled but process is running, stopping', config.server.name, config.slot, config.nickname);
-                bot.stop();
-                await bot.waitForStop();
-
-                bot.kill();
-            }
-            else if (status.enabled && !status.onServer && !status.botRunning) {
-                this.logger.info('Bot not on server, will check again', config.server.name, config.slot, config.nickname);
-            }
-            else if (status.enabled && !status.onServer && status.botRunning
-                && moment().diff(status.processStartedAt, 'seconds') > Config.BOT_JOIN_TIMEOUT
-                && (!status.lastSeenOnServerAt || moment().diff(status.lastSeenOnServerAt, 'seconds') > Config.BOT_ON_SERVER_TIMEOUT)
-            ) {
-                this.logger.info('Bot not on server, killing until next iteration', config.server.name, config.slot, config.nickname);
-
-                // Update nickname to avoid server "shadow banning" account by name
-                bot.rotateNickname();
-
-                bot.stop();
-                await bot.waitForStop();
-
-                bot.kill();
-            }
-            else if (status.enabled && status.onServer) {
-                this.logger.debug('Bot on server', config.server.name, config.slot, config.nickname);
+        for (const server of this.servers) {
+            for (const bot of server.getBots()) {
+                const config = bot.getConfig();
+                const status = bot.getStatus();
+    
+                if (moment().diff(status.onServerLastCheckedAt, 'seconds') > Config.BOT_STATUS_UPDATE_TIMEOUT) {
+                    continue;
+                }
+    
+                if (status.enabled && !status.processRunning) {
+                    this.logger.info('Bot process not running, relaunching', config.server.name, config.slot, config.nickname);
+                    await bot.relaunch();
+    
+                    // Give bot a few seconds before starting next one
+                    await sleep(45000);
+                }
+                else if (!status.enabled && status.processRunning) {
+                    this.logger.info('Bot is disabled but process is running, stopping', config.server.name, config.slot, config.nickname);
+                    bot.stop();
+                    await bot.waitForStop();
+    
+                    bot.kill();
+                }
+                else if (status.enabled && !status.onServer && !status.botRunning) {
+                    this.logger.info('Bot not on server, will check again', config.server.name, config.slot, config.nickname);
+                }
+                else if (status.enabled && !status.onServer && status.botRunning
+                    && moment().diff(status.processStartedAt, 'seconds') > Config.BOT_JOIN_TIMEOUT
+                    && (!status.lastSeenOnServerAt || moment().diff(status.lastSeenOnServerAt, 'seconds') > Config.BOT_ON_SERVER_TIMEOUT)
+                ) {
+                    this.logger.info('Bot not on server, killing until next iteration', config.server.name, config.slot, config.nickname);
+    
+                    // Update nickname to avoid server "shadow banning" account by name
+                    bot.rotateNickname();
+    
+                    bot.stop();
+                    await bot.waitForStop();
+    
+                    bot.kill();
+                }
+                else if (status.enabled && status.onServer) {
+                    this.logger.debug('Bot on server', config.server.name, config.slot, config.nickname);
+                }
             }
         }
     }
 
     public async shutdownBots(): Promise<void> {
-        for (const bot of this.bots) {
-            bot.stop();
-            await bot.waitForStop();
-            bot.kill();
+        for (const server of this.servers) {
+            for (const bot of server.getBots()) {
+                bot.stop();
+                await bot.waitForStop();
+                bot.kill();
+            }
         }
     }
 
     public getBots(): Bot[] {
-        return this.bots;
+        return this.servers.flatMap((server: Server) => server.getBots());
     }
 
     public isBotLaunchComplete(): boolean {
