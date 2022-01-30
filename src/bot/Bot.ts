@@ -28,25 +28,6 @@ class Bot {
             botRunning: false,
             cliReady: false
         };
-
-        // Kill child process when parent exists in order to not leave zombie processes behind
-        process.on('exit', () => {
-            this.kill();
-        });
-
-        process.on('SIGINT', () => {
-            console.log('SIGINT');
-            this.stop();
-            this.kill();
-            process.exit();
-        });
-
-        process.on('SIGTERM', () => {
-            console.log('SIGTERM');
-            this.stop();
-            this.kill();
-            process.exit();
-        });
     }
 
     public launch(): void {
