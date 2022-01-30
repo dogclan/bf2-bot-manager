@@ -6,7 +6,6 @@ import Bot from './bot/Bot';
 import BotConfig from './bot/BotConfig';
 import { clear } from './commands/clear';
 import { fill } from './commands/fill';
-import { setEnabled } from './commands/setEnabled';
 import { status } from './commands/status';
 import { Command } from './commands/typing';
 import Config from './config';
@@ -83,7 +82,7 @@ class BotManager {
 
         this.client = new Client({ intents: [Intents.FLAGS.GUILDS] });
 
-        this.commands = [status, setEnabled, fill, clear];
+        this.commands = [status, fill, clear];
 
         this.client.once('ready', async () => {
             this.client.user?.presence.set({ status: 'online' });
