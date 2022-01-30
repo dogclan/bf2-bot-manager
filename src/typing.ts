@@ -1,4 +1,5 @@
 import { ApplicationCommandPermissionData } from 'discord.js';
+import cron from 'node-cron';
 
 export type BotServer = {
     name: string
@@ -19,4 +20,9 @@ export type BotBaseConfig = {
 export type CommandPermissionSet = {
     guild: string
     permissions: ApplicationCommandPermissionData[]
+}
+
+export type Task = {
+    running?: boolean
+    schedule: cron.ScheduledTask
 }

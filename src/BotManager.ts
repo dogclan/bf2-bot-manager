@@ -11,15 +11,11 @@ import { status } from './commands/status';
 import { Command } from './commands/typing';
 import Config from './config';
 import logger from './logger';
+import { Task } from './typing';
 import { sleep } from './utility';
 
-type Tasks = {
+type BotManagerTasks = {
     maintenance: Task
-}
-
-type Task = {
-    running: boolean
-    schedule: cron.ScheduledTask
 }
 
 class BotManager {
@@ -32,7 +28,7 @@ class BotManager {
     private botLaunchComplete: boolean;
 
     private commands: Command[];
-    private tasks: Tasks;
+    private tasks: BotManagerTasks;
 
     constructor(token: string) {
         this.token = token;
@@ -170,15 +166,12 @@ class BotManager {
     private async maintainBots(): Promise<void> {
         for (const bot of this.bots) {
             const config = bot.getConfig();
-            this.logger.debug('Checking whether bot is on server', config.server.name, config.slot, config.nickname);
+            const status = bot.getStatus();
 
-            const updateOk = await bot.updateStatus();
-
-            if (!updateOk) {
+            if (moment().diff(status.onServerLastCheckedAt, 'seconds') > Config.BOT_STATUS_UPDATE_TIMEOUT) {
                 continue;
             }
 
-            const status = bot.getStatus();
             if (status.enabled && !status.processRunning) {
                 this.logger.info('Bot process not running, relaunching', config.server.name, config.slot, config.nickname);
                 await bot.relaunch();
