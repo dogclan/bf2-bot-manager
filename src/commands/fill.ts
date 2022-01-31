@@ -1,6 +1,5 @@
 import { CommandInteraction } from 'discord.js';
 import { ApplicationCommandOptionTypes } from 'discord.js/typings/enums';
-import Bot from '../bot/Bot';
 import BotManager from '../BotManager';
 import Server from '../server/Server';
 import { Command } from './typing';
