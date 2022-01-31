@@ -59,7 +59,7 @@ for bot in bots:
         try:
             cursor.execute(sql, {
                 'id': lastPid,
-                'name': basename,
+                'name': name,
                 'password': password,
                 'email': 'bla@bla.com',
                 'country': 'DE'
