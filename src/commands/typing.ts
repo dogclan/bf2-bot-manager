@@ -7,10 +7,20 @@ export interface Command extends ChatInputApplicationCommandData {
 
 export type Columns = {
     [key: string]: Column
+}
+
+export type ServerStatusColumns = Columns & {
     bot: Column
     running: Column
     onServer: Column
     lastChecked: Column
+}
+
+export type StatusOverviewColumns = Columns & {
+    server: Column
+    slots: Column
+    currentSlots: Column
+    filledSlots: Column
 }
 
 export type Column = {
