@@ -22,7 +22,7 @@ class Bot {
 
     private status: BotStatus;
 
-    private tasks: BotTasks
+    private tasks: BotTasks;
 
     constructor(config: BotConfig, enabled: boolean) {
         this.config = config;
@@ -51,7 +51,7 @@ class Bot {
                     scheduled: false
                 })
             }
-        }
+        };
     }
 
     public launch(): void {
@@ -192,7 +192,7 @@ class Bot {
         return this.sendCommand('stop');
     }
 
-    public async waitForStop(maxSleeps: number = 5): Promise<void> {
+    public async waitForStop(maxSleeps = 5): Promise<void> {
         let sleeps = 0;
         while (this.status.botRunning && sleeps++ < maxSleeps) {
             await sleep(1000);

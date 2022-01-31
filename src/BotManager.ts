@@ -188,7 +188,7 @@ class BotManager {
 
                 const filledSlots = bots.filter((b: Bot) => b.getStatus().onServer && b.getStatus().enabled).length;
                 const enabledBots = bots.filter((b: Bot) => b.getStatus().enabled).length;
-                const maxPopulation = slots * Config.OVERPOPULATE_FACTOR
+                const maxPopulation = slots * Config.OVERPOPULATE_FACTOR;
                 if (!bot.isEnabled() && filledSlots < slots && enabledBots < maxPopulation) {
                     // Enable if desired number of slots is currently not filled on the server and overpulate max has not been reached yet
                     this.logger.info(serverConfig.name, 'has slots to fill, enabling', config.nickname, slots, filledSlots, maxPopulation, enabledBots);
