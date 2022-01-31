@@ -2,6 +2,8 @@ version: '3.7'
 services:
   bot:
     build: .
+    volumes:
+      - ${PWD}/config.yaml:/usr/src/app/config.yaml
     environment:
       - TOKEN=your_discord_bot_token
       - LOG_LEVEL=info

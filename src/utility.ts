@@ -5,6 +5,7 @@ import { promisify } from 'util';
 export const globAsync = promisify(glob.glob);
 export const mkdirAsync = promisify(fs.mkdir);
 export const linkAsync = promisify(fs.link);
+export const readFileAsync = promisify(fs.readFile);
 export const writeFileAsync = promisify(fs.writeFile);
 
 export function generateCdkey(): string {

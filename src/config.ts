@@ -1,5 +1,5 @@
 import path from 'path';
-import { CommandPermissionSet, ServerBotConfig } from './typing';
+import { CommandPermissionSet } from './typing';
 
 export default abstract class Config {
     static readonly ROOT_DIR: string = path.join(__dirname, '..');
@@ -28,56 +28,5 @@ export default abstract class Config {
                 { id: '936992348846575666', type: 'ROLE', permission: true }
             ]
         }
-    ]
-    static readonly SERVERS: ServerBotConfig[] = [
-        {
-            name: 'dog-rotation',
-            address: '135.125.56.26',
-            port: 16472,
-            mod: 'mods/bf2',
-            slots: 8,
-            bots: [
-                { basename: 'HopefulRace', password: 'gas' },
-                { basename: 'ElyahouBeets', password: 'gas' },
-                { basename: 'ProudAlarmed', password: 'gas' },
-                { basename: 'NewtNicea', password: 'gas' },
-                { basename: 'PearBryga', password: 'gas' },
-                { basename: 'Conventional', password: 'gas' },
-                { basename: 'CapablePear', password: 'gas' },
-                { basename: 'SealBrockett', password: 'gas' },
-                { basename: 'AgedRace', password: 'gas' },
-                { basename: 'SaltyAdjeley', password: 'gas' },
-                { basename: 'ShootLeira', password: 'gas' },
-                { basename: 'Idolized', password: 'gas' },
-                { basename: 'BabyishToxic', password: 'gas' },
-                { basename: 'TotalPanther', password: 'gas' },
-                { basename: 'NoseThulium', password: 'gas' },
-                { basename: 'AtemoyaHuge', password: 'gas' },
-            ],
-        }, {
-            name: 'promote-openspy',
-            address: '85.214.21.18',
-            port: 16567,
-            mod: 'mods/bf2',
-            slots: 8,
-            bots: [
-                { basename: 'ModestJicama', password: 'gas' },
-                { basename: 'SeatUlyssia', password: 'gas' },
-                { basename: 'LeanLudovika', password: 'gas' },
-                { basename: 'Convert', password: 'gas' },
-                { basename: 'GryphinWater', password: 'gas' },
-                { basename: 'BellElephant', password: 'gas' },
-                { basename: 'DutifulLean', password: 'gas' },
-                { basename: 'RomaineXray', password: 'gas' },
-                { basename: 'FlimsyUschi', password: 'gas' },
-                { basename: 'DoubleAbove', password: 'gas' },
-                { basename: 'EconomicsFox', password: 'gas' },
-                { basename: 'TylaishaSnow', password: 'gas' },
-                { basename: 'DavyJones', password: 'gas' },
-                { basename: 'XCaliber', password: 'gas' },
-                { basename: 'SlyBoat', password: 'gas' },
-                { basename: 'OORetirement', password: 'gas' },
-            ],
-        },
     ];
 }
