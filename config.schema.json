@@ -1,0 +1,69 @@
+{
+    "$schema": "http://json-schema.org/schema",
+    "type": "array",
+    "minItems": 1,
+    "uniqueItems": true,
+    "description": "List of servers for which bots need to be run and managed",
+    "items": {
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "string",
+                "description": "Server name",
+                "examples": ["dog-rotation"]
+            },
+            "address": {
+                "type": "string",
+                "description": "Server IP address",
+                "examples": ["135.125.56.26"]
+            },
+            "port": {
+                "type": "number",
+                "description": "Server game port",
+                "examples": [16472]
+            },
+            "mod": {
+                "type": "string",
+                "description": "Server mod name/path",
+                "examples": ["mods/bf2"]
+            },
+            "slots": {
+                "type": "number",
+                "description": "Number of slots to fill with bots",
+                "examples": [8]
+            },
+            "bots": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "basename": {
+                            "type": "string",
+                            "description": "Basename of the bot (manager will append suffix at runtime to create nickname)",
+                            "examples": ["LucyFromLondon"]
+                        },
+                        "password": {
+                            "type": "string",
+                            "description": "Password for all accounts with this basename",
+                            "examples": ["gas"]
+                        }
+                    },
+                    "required": [
+                        "basename",
+                        "password"
+                    ]
+                }
+            }
+        },
+        "required": [
+            "name",
+            "address",
+            "port",
+            "mod",
+            "slots",
+            "bots"
+        ]
+    }
+}

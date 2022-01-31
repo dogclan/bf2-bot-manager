@@ -1,6 +1,10 @@
 import { Client, CommandInteraction, Intents, Interaction } from 'discord.js';
+import fs from 'fs';
+import yaml from 'js-yaml';
+import { Schema, ValidationError, Validator } from 'jsonschema';
 import moment from 'moment';
 import cron from 'node-cron';
+import path from 'path';
 import { Logger } from 'tslog';
 import Bot from './bot/Bot';
 import BotConfig from './bot/BotConfig';
@@ -11,8 +15,8 @@ import { Command } from './commands/typing';
 import Config from './config';
 import logger from './logger';
 import Server from './server/Server';
-import { Task } from './typing';
-import { sleep } from './utility';
+import { ServerBotConfig, Task } from './typing';
+import { readFileAsync, sleep } from './utility';
 
 type BotManagerTasks = {
     maintenance: Task
@@ -23,6 +27,7 @@ class BotManager {
 
     private client: Client;
     private logger: Logger;
+    private configSchema: Schema;
 
     private servers: Server[];
     private botLaunchComplete: boolean;
@@ -34,6 +39,7 @@ class BotManager {
         this.token = token;
 
         this.logger = logger.getChildLogger({ name: 'BotManagerLogger' });
+        this.configSchema = this.loadConfigSchema();
 
         this.servers = [];
         this.botLaunchComplete = false;
@@ -115,7 +121,23 @@ class BotManager {
     }
 
     public async launchBots(): Promise<void> {
-        await this.initializeBotConfigs();
+        let serverBotConfigs: ServerBotConfig[];
+        try {
+            serverBotConfigs = await this.loadServerBotConfigs();
+        }
+        catch (e: any) {
+            if (Array.isArray(e.errors) && e.schema) {
+                // Log all validation errors if schema validation failed
+                this.logger.fatal('Given config does not adhere to schema', e.errors.map((e: ValidationError) => `${e.property}: ${e.message}`));
+            }
+            else {
+                this.logger.fatal('Failed to read/parse config file', e.message);
+            }
+
+            process.exit(1);
+        }
+
+        await this.initializeBotConfigs(serverBotConfigs);
 
         for (const server of this.servers) {
             this.logger.info('Launching bots for', server.getConfig().name);
@@ -142,8 +164,8 @@ class BotManager {
         this.botLaunchComplete = true;
     }
 
-    private async initializeBotConfigs(): Promise<void> {
-        for (const serverBotConfig of Config.SERVERS) {
+    private async initializeBotConfigs(serverBotConfigs: ServerBotConfig[]): Promise<void> {
+        for (const serverBotConfig of serverBotConfigs) {
             const { bots: baseConfigs, slots: slots, ...botServer } = serverBotConfig;         
 
             this.logger.info('Preparing bots for', botServer.name);
@@ -171,6 +193,32 @@ class BotManager {
 
             this.servers.push(new Server({ name: botServer.name, slots }, bots));
         }
+    }
+
+    private loadConfigSchema(): Schema {
+        const schemaPath = path.join(Config.ROOT_DIR, 'config.schema.json');
+        let schema: Schema;
+        try {
+            const unparsed = fs.readFileSync(schemaPath, { encoding: 'utf8' });
+            schema = JSON.parse(unparsed);
+        }
+        catch (e: any) {
+            this.logger.fatal('Failed to read/parse config schema', schemaPath, e.message);
+            process.exit(1);
+        }
+
+        return schema;
+    }
+
+    private async loadServerBotConfigs(): Promise<ServerBotConfig[]> {
+        const configPath = path.join(Config.ROOT_DIR, 'config.yaml');
+        const unparsed = await readFileAsync(configPath, { encoding: 'utf8' });
+        const configs = yaml.load(unparsed) as ServerBotConfig[];
+
+        const validator = new Validator();
+        validator.validate(configs, this.configSchema, { throwAll: true });
+
+        return configs;
     }
 
     private async maintainBots(): Promise<void> {

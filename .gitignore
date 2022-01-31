@@ -238,3 +238,7 @@ dmypy.json
 
 # Running bot process files
 running/
+
+# Server bot config files
+config.yaml
+*.config.yaml
