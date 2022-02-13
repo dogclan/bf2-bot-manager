@@ -5,9 +5,28 @@ services:
     volumes:
       - ${PWD}/config.yaml:/usr/src/app/config.yaml
     environment:
-      - TOKEN=your_discord_bot_token
       - LOG_LEVEL=info
+      - TOKEN=your_discord_bot_token
+      - REDIS_URL=redis://:the_redis_password@redis
     extra_hosts:
       - "gpcm.gamespy.com:127.0.0.1"
       - "gpsp.gamespy.com:127.0.0.1"
       - "battlefield2.available.com:127.0.0.1"
+    depends_on:
+      - redis
+
+  redis:
+    image: "redis:alpine"
+    restart: always
+
+    command: redis-server --requirepass the_redis_password
+
+    volumes:
+      - redis:/data
+      - $PWD/redis.conf:/etc/redis/redis.conf
+
+    environment:
+      - REDIS_REPLICATION_MODE=master
+
+volumes:
+  redis:
