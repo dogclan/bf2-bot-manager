@@ -11,7 +11,7 @@ services:
     extra_hosts:
       - "gpcm.gamespy.com:127.0.0.1"
       - "gpsp.gamespy.com:127.0.0.1"
-      - "battlefield2.available.com:127.0.0.1"
+      - "battlefield2.available.gamespy.com:127.0.0.1"
     depends_on:
       - redis
 
