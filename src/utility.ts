@@ -28,7 +28,7 @@ export function generateCdkey(): string {
 }
 
 export function getBotName(basename: string, currentName?: string): string {
-    const numbers = [34, 42, 69, 101, 322, 404, 419, 420, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512];
+    const numbers = Array.from({length: 16}, (x, i) => i);
 
     if (currentName) {
         const currentNumber = Number(currentName.split('^').pop());
@@ -38,7 +38,7 @@ export function getBotName(basename: string, currentName?: string): string {
 
     const newNumber = numbers[Math.floor(Math.random() * numbers.length)];
 
-    return `${basename}^${newNumber}`;
+    return `${basename}^${Number(newNumber).toString(16)}`;
 }
 
 /**
