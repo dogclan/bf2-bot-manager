@@ -42,18 +42,17 @@ results = cursor.fetchall()
 
 lastPid = results.pop()['id'] if len(results) > 0 else 50000000
 
-numbers = [34, 42, 69, 101, 322, 404, 419, 420]
-for i in range(0, 10):
-    numbers.append(pow(2, i))
-
 errors = 0
 for bot in bots:
     basename, password = bot.values()
+
+    # Name must be leave space for 2 character name suffix ("^{number}")
     if len(basename) > 16:
         print(f'Name "{basename}" is too long (15 characters max.), skipping name')
-    for i in numbers:
+
+    for i in range(0, 16):
         lastPid += 1
-        name = f'{basename}^{i}'
+        name = f'{basename}^{i:x}'
         sql = 'INSERT INTO accounts (id, name, password, email, country) ' \
               'VALUES (%(id)s, %(name)s, %(password)s, %(email)s, %(country)s)'
         try:
