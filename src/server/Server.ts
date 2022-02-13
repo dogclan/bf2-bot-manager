@@ -25,7 +25,7 @@ class Server {
         for (const bot of bots) {
             const config = bot.getConfig();
             try {
-                this.logger.debug('launching bot process for slot', config.slot, config.nickname);
+                this.logger.debug('launching bot process for', config.basename);
                 bot.launch();
 
                 // Give bot a few seconds before starting next one
@@ -33,7 +33,7 @@ class Server {
                 await bot.updateStatus();
             }
             catch (e: any) {
-                this.logger.error('failed to launch bot process for slot', config.slot, config.nickname, e.message);
+                this.logger.error('failed to launch bot process for', config.basename, e.message);
             }
         }
     }
@@ -45,7 +45,7 @@ class Server {
             const status = bot.getStatus();
 
             if (moment().diff(status.onServerLastCheckedAt, 'seconds') > Config.BOT_STATUS_UPDATE_TIMEOUT) {
-                this.logger.debug('bot has not updated it\'s status recently, skipping', config.nickname);
+                this.logger.debug('bot has not updated it\'s status recently, skipping', config.basename);
                 continue;
             }
 
@@ -54,42 +54,42 @@ class Server {
             const maxPopulation = slots * Config.OVERPOPULATE_FACTOR;
             if (!bot.isEnabled() && filledSlots < slots && enabledBots < maxPopulation) {
                 // Enable if desired number of slots is currently not filled on the server and overpulate max has not been reached yet
-                this.logger.info('has slots to fill, enabling', config.nickname, slots, filledSlots, maxPopulation, enabledBots);
+                this.logger.info('has slots to fill, enabling', config.basename, slots, filledSlots, maxPopulation, enabledBots);
                 bot.setEnabled(true);
             }
             else if (bot.isEnabled() && (filledSlots > slots || enabledBots > maxPopulation)) {
                 // Disable if desired number of slots or overpopulate max has been exceeded
-                this.logger.info('has to many slots filled/bots running, disabling', config.nickname, slots, filledSlots, maxPopulation, enabledBots);
+                this.logger.info('has to many slots filled/bots running, disabling', config.basename, slots, filledSlots, maxPopulation, enabledBots);
                 bot.setEnabled(false);
             }
             else if (bot.isEnabled() && !status.onServer && filledSlots == slots) {
                 // Disable if bot is not on server but desired number of slots has been filled
-                this.logger.info('is filled up, disabling', config.nickname, slots, filledSlots, maxPopulation, enabledBots);
+                this.logger.info('is filled up, disabling', config.basename, slots, filledSlots, maxPopulation, enabledBots);
                 bot.setEnabled(false);
             }
 
             if (status.enabled && !status.processRunning) {
-                this.logger.info('bot process not running, (re-)launching', config.nickname);
+                this.logger.info('bot process not running, (re-)launching', config.basename);
                 await bot.relaunch();
 
                 // Give bot a few seconds before starting next one
                 await sleep(45000);
             }
             else if (!status.enabled && status.processRunning) {
-                this.logger.info('bot is disabled but process is running, stopping', config.nickname);
+                this.logger.info('bot is disabled but process is running, stopping', config.basename);
                 bot.stop();
                 await bot.waitForStop();
 
                 bot.kill();
             }
             else if (status.enabled && !status.onServer && !status.botRunning) {
-                this.logger.info('bot not on server, will check again', config.nickname);
+                this.logger.info('bot not on server, will check again', config.basename);
             }
             else if (status.enabled && !status.onServer && status.botRunning
                 && moment().diff(status.processStartedAt, 'seconds') > Config.BOT_JOIN_TIMEOUT
                 && (!status.lastSeenOnServerAt || moment().diff(status.lastSeenOnServerAt, 'seconds') > Config.BOT_ON_SERVER_TIMEOUT)
             ) {
-                this.logger.info('bot not on server, killing until next iteration', config.nickname);
+                this.logger.info('bot not on server, killing until next iteration', config.basename);
 
                 // Update nickname to avoid server "shadow banning" account by name
                 bot.rotateNickname();
@@ -100,7 +100,7 @@ class Server {
                 bot.kill();
             }
             else if (status.enabled && status.onServer) {
-                this.logger.debug('bot on server', config.nickname);
+                this.logger.debug('bot on server', config.basename);
             }
         }
     }
