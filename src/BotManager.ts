@@ -2,7 +2,6 @@ import {Client, CommandInteraction, Intents, Interaction} from 'discord.js';
 import fs from 'fs';
 import yaml from 'js-yaml';
 import {Schema, ValidationError, Validator} from 'jsonschema';
-import moment from 'moment';
 import cron from 'node-cron';
 import path from 'path';
 import {Logger} from 'tslog';
@@ -17,7 +16,7 @@ import Config from './config';
 import logger from './logger';
 import Server from './server/Server';
 import {ServerBotConfig, Task} from './typing';
-import {readFileAsync, sleep} from './utility';
+import {readFileAsync} from './utility';
 import axios from 'axios';
 import RedisCache from './http/RedisCache';
 import {CachedHttpClient} from './http/CachedHttpClient';
@@ -75,7 +74,7 @@ class BotManager {
                     this.logger.debug('Running bot maintenance');
                     this.tasks.maintenance.running = true;
                     try {
-                        await this.maintainBots();
+                        await Promise.allSettled(this.servers.map((s: Server) => s.maintainBots()));
                         this.logger.debug('Bot maintenance complete');
                     }
                     catch (e: any) {
@@ -141,26 +140,9 @@ class BotManager {
             process.exit(1);
         }
 
-        await this.initializeBots(serverBotConfigs);
+        await this.initializeServers(serverBotConfigs);
 
-        for (const server of this.servers) {
-            this.logger.info('Launching bots for', server.getConfig().name);
-            const bots = server.getBots().filter((bot: Bot) => bot.isEnabled());
-            for (const bot of bots) {
-                const config = bot.getConfig();
-                try {
-                    this.logger.debug('Launching bot process for slot', config.slot, config.nickname);
-                    bot.launch();
-    
-                    // Give bot a few seconds before starting next one
-                    await sleep(45000);
-                    await bot.updateStatus();
-                }
-                catch (e: any) {
-                    this.logger.error('Failed to launch bot process for slot', config.slot, config.nickname, e.message);
-                }
-            }
-        }
+        await Promise.allSettled(this.servers.map((s: Server) => s.launchBots()));
 
         // Start maintenance task
         this.tasks.maintenance.schedule.start();
@@ -168,7 +150,7 @@ class BotManager {
         this.botLaunchComplete = true;
     }
 
-    private async initializeBots(serverBotConfigs: ServerBotConfig[]): Promise<void> {
+    private async initializeServers(serverBotConfigs: ServerBotConfig[]): Promise<void> {
         // Set up cached http client for bots to use when checking their onserver status
         const aclient = axios.create({
             timeout: Config.API_REQUEST_TIMEOUT
@@ -232,76 +214,6 @@ class BotManager {
         validator.validate(configs, this.configSchema, { throwAll: true });
 
         return configs;
-    }
-
-    private async maintainBots(): Promise<void> {
-        for (const server of this.servers) {
-            const serverConfig = server.getConfig();
-            const slots = serverConfig.currentSlots != undefined ? serverConfig.currentSlots : serverConfig.slots;
-            const bots = server.getBots();
-            for (const bot of bots) {
-                const config = bot.getConfig();
-                const status = bot.getStatus();
-    
-                if (moment().diff(status.onServerLastCheckedAt, 'seconds') > Config.BOT_STATUS_UPDATE_TIMEOUT) {
-                    continue;
-                }
-
-                const filledSlots = bots.filter((b: Bot) => b.getStatus().onServer && b.getStatus().enabled).length;
-                const enabledBots = bots.filter((b: Bot) => b.getStatus().enabled).length;
-                const maxPopulation = slots * Config.OVERPOPULATE_FACTOR;
-                if (!bot.isEnabled() && filledSlots < slots && enabledBots < maxPopulation) {
-                    // Enable if desired number of slots is currently not filled on the server and overpulate max has not been reached yet
-                    this.logger.info(serverConfig.name, 'has slots to fill, enabling', config.nickname, slots, filledSlots, maxPopulation, enabledBots);
-                    bot.setEnabled(true);
-                }
-                else if (bot.isEnabled() && (filledSlots > slots || enabledBots > maxPopulation)) {
-                    // Disable if desired number of slots or overpopulate max has been exceeded
-                    this.logger.info(serverConfig.name, 'has to many slots filled/bots running, disabling', config.nickname, slots, filledSlots, maxPopulation, enabledBots);
-                    bot.setEnabled(false);
-                }
-                else if (bot.isEnabled() && !status.onServer && filledSlots == slots) {
-                    // Disable if bot is not on server but desired number of slots has been filled
-                    this.logger.info(serverConfig.name, 'is filled up, disabling', config.nickname, slots, filledSlots, maxPopulation, enabledBots);
-                    bot.setEnabled(false);
-                }
-
-                if (status.enabled && !status.processRunning) {
-                    this.logger.info('Bot process not running, (re-)launching', config.server.name, config.slot, config.nickname);
-                    await bot.relaunch();
-    
-                    // Give bot a few seconds before starting next one
-                    await sleep(45000);
-                }
-                else if (!status.enabled && status.processRunning) {
-                    this.logger.info('Bot is disabled but process is running, stopping', config.server.name, config.slot, config.nickname);
-                    bot.stop();
-                    await bot.waitForStop();
-    
-                    bot.kill();
-                }
-                else if (status.enabled && !status.onServer && !status.botRunning) {
-                    this.logger.info('Bot not on server, will check again', config.server.name, config.slot, config.nickname);
-                }
-                else if (status.enabled && !status.onServer && status.botRunning
-                    && moment().diff(status.processStartedAt, 'seconds') > Config.BOT_JOIN_TIMEOUT
-                    && (!status.lastSeenOnServerAt || moment().diff(status.lastSeenOnServerAt, 'seconds') > Config.BOT_ON_SERVER_TIMEOUT)
-                ) {
-                    this.logger.info('Bot not on server, killing until next iteration', config.server.name, config.slot, config.nickname);
-    
-                    // Update nickname to avoid server "shadow banning" account by name
-                    bot.rotateNickname();
-    
-                    bot.stop();
-                    await bot.waitForStop();
-    
-                    bot.kill();
-                }
-                else if (status.enabled && status.onServer) {
-                    this.logger.debug('Bot on server', config.server.name, config.slot, config.nickname);
-                }
-            }
-        }
     }
 
     public async shutdownBots(): Promise<void> {
