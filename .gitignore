@@ -236,6 +236,9 @@ dmypy.json
 # VS Code settings
 .vscode/
 
+# IntelliJ project settings
+.idea/
+
 # Running bot process files
 running/
 
