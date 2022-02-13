@@ -30,7 +30,7 @@ class Bot {
         this.config = config;
         this.httpClient = httpClient;
 
-        this.logger = logger.getChildLogger({ name: 'BotLogger' });
+        this.logger = logger.getChildLogger({ name: 'BotLogger', prefix: [this.config.basename, `(${this.config.server.name})`] });
 
         this.status = {
             enabled: enabled,
@@ -46,13 +46,13 @@ class Bot {
                     // (requests going out one after the other rather than all at once)
                     await sleep(randomNumber(0, 2000));
 
-                    this.logger.debug(this.config.nickname, 'updating on server status');
+                    this.logger.debug('updating on server status');
                     try {
                         await this.updateStatus();
-                        this.logger.debug(this.config.nickname, 'on server status update complete');
+                        this.logger.debug('on server status update complete');
                     }
                     catch (e: any) {
-                        this.logger.error(this.config.nickname, 'encountered an error during bot on server status update', e.message);
+                        this.logger.error('encountered an error during bot on server status update', e.message);
                     }
                 }, {
                     scheduled: false
@@ -63,7 +63,7 @@ class Bot {
 
     public launch(): void {
         if (!this.status.enabled) {
-            this.logger.warn(this.config.nickname, 'currently disabled, will not launch');
+            this.logger.warn('currently disabled, will not launch');
             return;
         }
 
@@ -74,13 +74,13 @@ class Bot {
         });
 
         this.process.on('spawn', () => {
-            this.logger.debug(this.config.nickname, 'process launched successfully');
+            this.logger.debug('process launched successfully');
             this.status.processRunning = true;
             this.status.processStartedAt = moment();
         });
 
         this.process.on('exit', (code, signal) => {
-            this.logger.debug(this.config.nickname, `exited with code ${code} and signal ${signal}`);
+            this.logger.debug(`exited with code ${code} and signal ${signal}`);
             this.status.processRunning = false;
             this.status.processStartedAt = undefined;
         });
@@ -91,30 +91,30 @@ class Bot {
             // Log each line individually
             for (const line of lines) {
                 if (!line.includes('> That command doesn\'t exist')) {
-                    this.logger.debug(this.config.nickname, `stdout: ${line}`);
+                    this.logger.debug(`stdout: ${line}`);
                 }
             }
 
             if (!this.status.cliReady && String(data).endsWith('> ')) {
-                this.logger.debug(this.config.nickname, 'cli is ready');
+                this.logger.debug('cli is ready');
                 this.status.cliReady = true;
             }
 
             if (!this.status.botRunning && String(data).includes('started successfully')) {
-                this.logger.info(this.config.nickname, 'started successfully');
+                this.logger.info('started successfully as', this.config.nickname);
                 this.status.botRunning = true;
                 this.status.botStartedAt = moment();
                 this.tasks.statusUpdate.schedule.start();
             }
             else if (this.status.botRunning && String(data).includes('stopped successfully')) {
-                this.logger.info(this.config.nickname, 'stopped successfully');
+                this.logger.info('stopped successfully');
                 this.status.botRunning = false;
                 this.status.botStartedAt = undefined;
             }
         });
 
         this.process.stderr.on('data', (data) => {
-            this.logger.error(this.config.nickname, `stderr: ${data}`);
+            this.logger.error(`stderr: ${data}`);
         });
     }
 
@@ -175,7 +175,7 @@ class Bot {
             }
         }
         catch (e: any) {
-            this.logger.error(this.config.nickname, 'failed to determine whether bot is on server', e.message);
+            this.logger.error('failed to determine whether bot is on server', e.message);
         }
     }
 
@@ -210,7 +210,7 @@ class Bot {
         }
 
         if (sleeps >= maxSleeps) {
-            this.logger.warn(this.config.nickname, 'failed to stop gracefully', maxSleeps);
+            this.logger.warn('failed to stop gracefully', maxSleeps);
         }
     }
 
@@ -228,17 +228,17 @@ class Bot {
 
     private sendCommand(cmd: BotExeCommand): boolean {
         if (this.process && this.status.cliReady) {
-            this.logger.debug(this.config.nickname, 'sending command to process via stdin: ', cmd);
-            this.logger.debug(this.config.nickname, 'cli will be busy');
+            this.logger.debug('sending command to process via stdin: ', cmd);
+            this.logger.debug('cli will be busy');
             this.status.cliReady = false;
             return this.process.stdin.write(`${cmd}\n`);
         }
         else if (this.process && !this.status.cliReady) {
-            this.logger.warn(this.config.nickname, 'cli is not ready, rejecting command', cmd);
+            this.logger.warn('cli is not ready, rejecting command', cmd);
             return false;
         }
         else {
-            this.logger.warn(this.config.nickname, 'process is not running, rejecting command', cmd);
+            this.logger.warn('process is not running, rejecting command', cmd);
             return false;
         }
     }
