@@ -8,6 +8,16 @@ export const linkAsync = promisify(fs.link);
 export const readFileAsync = promisify(fs.readFile);
 export const writeFileAsync = promisify(fs.writeFile);
 
+export function jsonParseAsync(jsonString: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+        try {
+            resolve(JSON.parse(jsonString));
+        } catch (e) {
+            reject(e);
+        }
+    });
+}
+
 export function generateCdkey(): string {
     const elements = [];
     for (let i = 0; i < 5; i++) {
@@ -29,6 +39,13 @@ export function getBotName(basename: string, currentName?: string): string {
     const newNumber = numbers[Math.floor(Math.random() * numbers.length)];
 
     return `${basename}^${newNumber}`;
+}
+
+/**
+ * Returns a random number between min (inclusive) and max (exclusive)
+ */
+export function randomNumber(min: number, max: number) {
+    return Math.random() * (max - min) + min;
 }
 
 export function randomString(length: number): string {  

@@ -1,13 +1,14 @@
-import axios from 'axios';
-import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
+import {ChildProcessWithoutNullStreams, spawn} from 'child_process';
 import moment from 'moment';
 import cron from 'node-cron';
-import { Logger } from 'tslog';
+import {Logger} from 'tslog';
 import logger from '../logger';
-import { Task } from '../typing';
-import { sleep } from '../utility';
+import {Task} from '../typing';
+import {randomNumber, sleep} from '../utility';
 import BotConfig from './BotConfig';
-import { BotStatus } from './typing';
+import {BotStatus} from './typing';
+import {CachedHttpClient} from '../http/CachedHttpClient';
+import Config from '../config';
 
 type BotExeCommand = 'start' | 'stop'
 type BotTasks = {
@@ -16,6 +17,7 @@ type BotTasks = {
 
 class Bot {
     private config: BotConfig;
+    private httpClient: CachedHttpClient;
 
     private logger: Logger;
     private process?: ChildProcessWithoutNullStreams;
@@ -24,8 +26,9 @@ class Bot {
 
     private tasks: BotTasks;
 
-    constructor(config: BotConfig, enabled: boolean) {
+    constructor(config: BotConfig, httpClient: CachedHttpClient, enabled: boolean) {
         this.config = config;
+        this.httpClient = httpClient;
 
         this.logger = logger.getChildLogger({ name: 'BotLogger' });
 
@@ -39,6 +42,10 @@ class Bot {
         this.tasks = {
             statusUpdate: {
                 schedule: cron.schedule('10,30,50 * * * * *', async () => {
+                    // Wait a random number of milliseconds to improve cache hit rate
+                    // (requests going out one after the other rather than all at once)
+                    await sleep(randomNumber(0, 2000));
+
                     this.logger.debug(this.config.nickname, 'updating on server status');
                     try {
                         await this.updateStatus();
@@ -154,8 +161,12 @@ class Bot {
 
     public async updateStatus(): Promise<void> {
         try {
-            const resp = await axios.get(`https://api.bflist.io/bf2/v1/servers/${this.config.server.address}:${this.config.server.port}/players`);
-            const players = resp.data;
+            const players = await this.httpClient.get(
+                `https://api.bflist.io/bf2/v1/servers/${this.config.server.address}:${this.config.server.port}/players`,
+                {
+                    ttl: Config.STATUS_CACHE_TTL
+                }
+            );
             this.status.onServer = players.some((p: any) => p?.name == this.config.nickname);
             this.status.onServerLastCheckedAt = moment();
 

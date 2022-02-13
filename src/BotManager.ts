@@ -1,23 +1,26 @@
-import { Client, CommandInteraction, Intents, Interaction } from 'discord.js';
+import {Client, CommandInteraction, Intents, Interaction} from 'discord.js';
 import fs from 'fs';
 import yaml from 'js-yaml';
-import { Schema, ValidationError, Validator } from 'jsonschema';
+import {Schema, ValidationError, Validator} from 'jsonschema';
 import moment from 'moment';
 import cron from 'node-cron';
 import path from 'path';
-import { Logger } from 'tslog';
+import {Logger} from 'tslog';
 import Bot from './bot/Bot';
 import BotConfig from './bot/BotConfig';
-import { clear } from './commands/clear';
-import { fill } from './commands/fill';
-import { setSlots } from './commands/setSlots';
-import { status } from './commands/status';
-import { Command } from './commands/typing';
+import {clear} from './commands/clear';
+import {fill} from './commands/fill';
+import {setSlots} from './commands/setSlots';
+import {status} from './commands/status';
+import {Command} from './commands/typing';
 import Config from './config';
 import logger from './logger';
 import Server from './server/Server';
-import { ServerBotConfig, Task } from './typing';
-import { readFileAsync, sleep } from './utility';
+import {ServerBotConfig, Task} from './typing';
+import {readFileAsync, sleep} from './utility';
+import axios from 'axios';
+import RedisCache from './http/RedisCache';
+import {CachedHttpClient} from './http/CachedHttpClient';
 
 type BotManagerTasks = {
     maintenance: Task
@@ -138,7 +141,7 @@ class BotManager {
             process.exit(1);
         }
 
-        await this.initializeBotConfigs(serverBotConfigs);
+        await this.initializeBots(serverBotConfigs);
 
         for (const server of this.servers) {
             this.logger.info('Launching bots for', server.getConfig().name);
@@ -165,9 +168,18 @@ class BotManager {
         this.botLaunchComplete = true;
     }
 
-    private async initializeBotConfigs(serverBotConfigs: ServerBotConfig[]): Promise<void> {
+    private async initializeBots(serverBotConfigs: ServerBotConfig[]): Promise<void> {
+        // Set up cached http client for bots to use when checking their onserver status
+        const aclient = axios.create({
+            timeout: Config.API_REQUEST_TIMEOUT
+        });
+        const cache = new RedisCache(Config.REDIS_URL, Config.REDIS_KEY_PREFIX);
+        await cache.connect();
+
+        const httpClient = new CachedHttpClient(aclient, cache);
+
         for (const serverBotConfig of serverBotConfigs) {
-            const { bots: baseConfigs, slots: slots, ...botServer } = serverBotConfig;         
+            const { bots: baseConfigs, slots: slots, ...botServer } = serverBotConfig;
 
             this.logger.info('Preparing bots for', botServer.name);
             const bots: Bot[] = [];
@@ -189,7 +201,7 @@ class BotManager {
 
                 // Enable as many bots as the server has slots
                 const enabled = slot < slots;
-                bots.push(new Bot(config, enabled));
+                bots.push(new Bot(config, httpClient, enabled));
             }
 
             this.servers.push(new Server({ name: botServer.name, slots }, bots));
