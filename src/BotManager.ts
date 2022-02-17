@@ -22,7 +22,8 @@ import RedisCache from './http/RedisCache';
 import {CachedHttpClient} from './http/CachedHttpClient';
 
 type BotManagerTasks = {
-    maintenance: Task
+    botMaintenance: Task
+    freeSlotCheck: Task
 }
 
 class BotManager {
@@ -63,16 +64,16 @@ class BotManager {
         });
 
         this.tasks = {
-            maintenance: {
+            botMaintenance: {
                 running: false,
                 schedule: cron.schedule('*/2 * * * *', async () => {
-                    if (this.tasks.maintenance.running) {
+                    if (this.tasks.botMaintenance.running) {
                         this.logger.warn('Bot maintenance is alreay running, skipping');
                         return;
                     }
 
                     this.logger.debug('Running bot maintenance');
-                    this.tasks.maintenance.running = true;
+                    this.tasks.botMaintenance.running = true;
                     try {
                         await Promise.allSettled(this.servers.map((s: Server) => s.maintainBots()));
                         this.logger.debug('Bot maintenance complete');
@@ -81,10 +82,30 @@ class BotManager {
                         this.logger.error('Encountered an error during bot maintenance', e.message);
                     }
                     finally {
-                        this.tasks.maintenance.running = false;
+                        this.tasks.botMaintenance.running = false;
                     }
                 }, {
                     scheduled: false
+                })
+            },
+            freeSlotCheck: {
+                running: false,
+                schedule: cron.schedule('10,30,50 * * * * *', async () => {
+                    if (this.tasks.freeSlotCheck.running) {
+                        this.logger.warn('Free slot check is already running, skipping');
+                    }
+
+                    this.logger.debug('Running free slot check');
+                    this.tasks.freeSlotCheck.running = true;
+                    try {
+                        await Promise.allSettled(this.servers.map((s: Server) => s.ensureReservedSlots()));
+                    }
+                    catch (e: any) {
+                        this.logger.debug('Encountered an error during free slot check', e.message);
+                    }
+                    finally {
+                        this.tasks.freeSlotCheck.running = false;
+                    }
                 })
             }
         };
@@ -142,10 +163,14 @@ class BotManager {
 
         await this.initializeServers(serverBotConfigs);
 
+        // Run ensureReservedSlots once to make sure we don't initially fill the server up beyond the limit
+        await Promise.allSettled(this.servers.map((s: Server) => s.ensureReservedSlots(true)));
+
         await Promise.allSettled(this.servers.map((s: Server) => s.launchBots()));
 
-        // Start maintenance task
-        this.tasks.maintenance.schedule.start();
+        // Start tasks
+        this.tasks.botMaintenance.schedule.start();
+        this.tasks.freeSlotCheck.schedule.start();
 
         this.botLaunchComplete = true;
     }
@@ -161,16 +186,19 @@ class BotManager {
         const httpClient = new CachedHttpClient(aclient, cache);
 
         for (const serverBotConfig of serverBotConfigs) {
-            const { bots: baseConfigs, slots: slots, ...botServer } = serverBotConfig;
+            const { bots: baseConfigs, mod: mod, ...serverConfig } = serverBotConfig;
 
-            this.logger.info('Preparing bots for', botServer.name);
+            this.logger.info('Preparing bots for', serverConfig.name);
             const bots: Bot[] = [];
             for (const [slot, baseConfig] of baseConfigs.entries()) {
                 const config = new BotConfig(
                     baseConfig.basename,
                     baseConfig.password,
                     slot,
-                    botServer
+                    {
+                        ...serverConfig,
+                        mod: mod,
+                    }
                 );
 
                 try {
@@ -181,12 +209,12 @@ class BotManager {
                     this.logger.error('Failed to set up running folder for slot', config.slot, config.nickname, e.message);
                 }
 
-                // Enable as many bots as the server has slots
-                const enabled = slot < slots;
-                bots.push(new Bot(config, httpClient, enabled));
+                const bot = new Bot(httpClient, config);
+                bots.push(bot);
             }
 
-            this.servers.push(new Server({ name: botServer.name, slots }, bots));
+            const server = new Server(httpClient, serverConfig, bots);
+            this.servers.push(server);
         }
     }
 

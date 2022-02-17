@@ -4,7 +4,7 @@ import cron from 'node-cron';
 import {Logger} from 'tslog';
 import logger from '../logger';
 import {Task} from '../typing';
-import {randomNumber, sleep} from '../utility';
+import {getStatusCheckURL, sleep} from '../utility';
 import BotConfig from './BotConfig';
 import {BotStatus} from './typing';
 import {CachedHttpClient} from '../http/CachedHttpClient';
@@ -16,8 +16,8 @@ type BotTasks = {
 }
 
 class Bot {
-    private config: BotConfig;
     private httpClient: CachedHttpClient;
+    private config: BotConfig;
 
     private logger: Logger;
     private process?: ChildProcessWithoutNullStreams;
@@ -26,14 +26,14 @@ class Bot {
 
     private tasks: BotTasks;
 
-    constructor(config: BotConfig, httpClient: CachedHttpClient, enabled: boolean) {
-        this.config = config;
+    constructor(httpClient: CachedHttpClient, config: BotConfig) {
         this.httpClient = httpClient;
+        this.config = config;
 
         this.logger = logger.getChildLogger({ name: 'BotLogger', prefix: [this.config.basename, `(${this.config.server.name})`] });
 
         this.status = {
-            enabled: enabled,
+            enabled: false,
             processRunning: false,
             botRunning: false,
             cliReady: false
@@ -41,11 +41,8 @@ class Bot {
 
         this.tasks = {
             statusUpdate: {
-                schedule: cron.schedule('10,30,50 * * * * *', async () => {
-                    // Wait a random number of milliseconds to improve cache hit rate
-                    // (requests going out one after the other rather than all at once)
-                    await sleep(randomNumber(0, 2000));
-
+                // Server slot status update runs at 10,30,50, so data should be cached before bot updates start
+                schedule: cron.schedule('12,32,52 * * * * *', async () => {
                     this.logger.debug('updating on server status');
                     try {
                         await this.updateStatus();
@@ -161,13 +158,13 @@ class Bot {
 
     public async updateStatus(): Promise<void> {
         try {
-            const players = await this.httpClient.get(
-                `https://api.bflist.io/bf2/v1/servers/${this.config.server.address}:${this.config.server.port}/players`,
+            const server = await this.httpClient.get(
+                getStatusCheckURL(this.config.server.address, this.config.server.port),
                 {
                     ttl: Config.STATUS_CACHE_TTL
                 }
             );
-            this.status.onServer = players.some((p: any) => p?.name == this.config.nickname);
+            this.status.onServer = server.players.some((p: any) => p?.name == this.config.nickname);
             this.status.onServerLastCheckedAt = moment();
 
             if (this.status.onServer) {

@@ -32,6 +32,11 @@
                 "description": "Number of slots to fill with bots",
                 "examples": [8]
             },
+            "reservedSlots": {
+                "type": "number",
+                "description": "Number of slots to keep free on the server as it fills up (reserved for real players)",
+                "examples": [4]
+            },
             "bots": {
                 "type": "array",
                 "minItems": 1,

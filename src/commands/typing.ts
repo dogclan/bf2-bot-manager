@@ -19,6 +19,7 @@ export type ServerStatusColumns = Columns & {
 export type StatusOverviewColumns = Columns & {
     server: Column
     slots: Column
+    reservedSlots: Column
     currentSlots: Column
     filledSlots: Column
 }

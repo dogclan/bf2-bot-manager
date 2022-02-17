@@ -15,6 +15,8 @@ export default abstract class Config {
     static readonly BOT_JOIN_TIMEOUT = Number(process.env.BOT_JOIN_TIMEOUT) || 300;
     static readonly BOT_ON_SERVER_TIMEOUT = Number(process.env.BOT_ON_SERVER_TIMEOUT) || 180;
     static readonly BOT_STATUS_UPDATE_TIMEOUT = Number(process.env.BOT_STATUS_UPDATE_TIMEOUT) || 30;
+    static readonly BOT_SLOT_TIMEOUT = Number(process.env.BOT_SLOT_TIMEOUT) || 60;
+    static readonly RESERVED_SLOT_TIMEOUT = Number(process.env.RESERVED_SLOT_TIMEOUT) || 240;
     static readonly OVERPOPULATE_FACTOR = Number(process.env.OVERPOPULATE_FACTOR) || 2;
 
     static readonly TOKEN: string = process.env.TOKEN || '';
