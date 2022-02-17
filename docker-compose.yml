@@ -2,6 +2,10 @@ version: '3.7'
 services:
   bot:
     build: .
+    restart: always
+
+    command: ["./wait-for-it.sh", "redis:6379", "--timeout=60", "--", "node", "dist/index.js"]
+
     volumes:
       - ${PWD}/config.yaml:/usr/src/app/config.yaml
     environment:
