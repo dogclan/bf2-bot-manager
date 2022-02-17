@@ -164,7 +164,7 @@ class Server {
                 this.status.currentSlotsTakenSince = moment();
             }
         }
-        else if (availableSlots > currentSlots && availableSlots < this.config.slots) {
+        else if (availableSlots > currentSlots && currentSlots < this.config.slots) {
             // Slots are available, figure out whether to increase current slots now or later
             if (moment().diff(this.status.availableSlotsFreeSince, 'seconds') > Config.RESERVED_SLOT_TIMEOUT) {
                 // Slots are available and timeout has either passed or is not relevant (since timestamp not set)
