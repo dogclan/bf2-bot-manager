@@ -50,16 +50,16 @@ class BotManager {
 
         // Kill child process when parent exists in order to not leave zombie processes behind
         process.on('exit', async () => {
-            await this.shutdownBots();
+            await this.shutdown();
         });
 
         process.on('SIGINT', async () => {
-            await this.shutdownBots();
+            await this.shutdown();
             process.exit();
         });
 
         process.on('SIGTERM', async () => {
-            await this.shutdownBots();
+            await this.shutdown();
             process.exit();
         });
 
@@ -244,7 +244,10 @@ class BotManager {
         return configs;
     }
 
-    public async shutdownBots(): Promise<void> {
+    public async shutdown(): Promise<void> {
+        this.tasks.botMaintenance.schedule.stop();
+        this.tasks.freeSlotCheck.schedule.stop();
+
         for (const server of this.servers) {
             for (const bot of server.getBots()) {
                 bot.stop();
