@@ -120,6 +120,10 @@ async function formatStatusOverview(servers: Server[]): Promise<string> {
             heading: 'Slots default',
             width: 13
         },
+        reservedSlots: {
+            heading: 'Slots reserved',
+            width: 14
+        },
         currentSlots: {
             heading: 'Slots current',
             width: 13
@@ -153,11 +157,12 @@ async function formatStatusOverview(servers: Server[]): Promise<string> {
     for (const server of servers) {
         const config = server.getConfig();
         const bots = server.getBots();
-        const currentSlots = config.currentSlots != undefined ? config.currentSlots : config.slots;
+        const currentSlots = server.getCurrentSlots();
         const filledSlots = bots.filter((b) => b.getStatus().onServer).length;
 
         formatted += config.name.padEnd(columns.server.width, ' ');
         formatted += String(config.slots).padEnd(columns.slots.width);
+        formatted += String(server.getReservedSlots()).padEnd(columns.reservedSlots.width);
         formatted += String(currentSlots).padEnd(columns.currentSlots.width);
         formatted += String(filledSlots).padEnd(columns.filledSlots.width);
         formatted += '\n';

@@ -1,6 +1,6 @@
 import fs from 'fs';
 import glob from 'glob';
-import { promisify } from 'util';
+import {promisify} from 'util';
 
 export const globAsync = promisify(glob.glob);
 export const mkdirAsync = promisify(fs.mkdir);
@@ -25,6 +25,10 @@ export function generateCdkey(): string {
     }
 
     return elements.join('-');
+}
+
+export function getStatusCheckURL(ip: string, port: number): string {
+    return `https://api.bflist.io/bf2/v1/servers/${ip}:${port}`;
 }
 
 export function getBotName(basename: string, currentName?: string): string {
