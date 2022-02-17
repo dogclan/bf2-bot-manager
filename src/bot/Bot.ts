@@ -9,6 +9,7 @@ import BotConfig from './BotConfig';
 import {BotStatus} from './typing';
 import {CachedHttpClient} from '../http/CachedHttpClient';
 import Config from '../config';
+import {BflistPlayer, BflistServer} from '../http/typing';
 
 type BotExeCommand = 'start' | 'stop'
 type BotTasks = {
@@ -158,13 +159,15 @@ class Bot {
 
     public async updateStatus(): Promise<void> {
         try {
-            const server = await this.httpClient.get(
+            const server: BflistServer = await this.httpClient.get(
                 getStatusCheckURL(this.config.server.address, this.config.server.port),
                 {
                     ttl: Config.STATUS_CACHE_TTL
                 }
             );
-            this.status.onServer = server.players.some((p: any) => p?.name == this.config.nickname);
+            const player = server.players.find((p: BflistPlayer) => p.name == this.config.nickname);
+            this.status.onServer = !!player;
+            this.status.team = player?.team;
             this.status.onServerLastCheckedAt = moment();
 
             if (this.status.onServer) {

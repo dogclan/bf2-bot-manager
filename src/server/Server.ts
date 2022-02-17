@@ -6,6 +6,7 @@ import logger from '../logger';
 import moment from 'moment';
 import Config from '../config';
 import {CachedHttpClient} from '../http/CachedHttpClient';
+import {BflistPlayer, BflistServer} from '../http/typing';
 
 class Server {
     private httpClient: CachedHttpClient;
@@ -58,22 +59,35 @@ class Server {
                 continue;
             }
 
-            const filledSlots = this.bots.filter((b: Bot) => b.getStatus().onServer && b.getStatus().enabled).length;
-            const enabledBots = this.bots.filter((b: Bot) => b.getStatus().enabled).length;
+            const botsOnServer = this.bots.filter((b: Bot) => b.getStatus().onServer && b.getStatus().enabled);
+            const filledSlots = botsOnServer.length;
+            const population = this.bots.filter((b: Bot) => b.getStatus().enabled).length;
             const maxPopulation = slots * Config.OVERPOPULATE_FACTOR;
-            if (!bot.isEnabled() && filledSlots < slots && enabledBots < maxPopulation) {
-                // Enable if desired number of slots is currently not filled on the server and overpulate max has not been reached yet
-                this.logger.info('has slots to fill, enabling', config.basename, slots, filledSlots, maxPopulation, enabledBots);
+            const teamsSizes = [
+                botsOnServer.filter((b: Bot) => b.getStatus().team == 1).length,
+                botsOnServer.filter((b: Bot) => b.getStatus().team == 2).length
+            ];
+            // Use actual team size if bot is on server, else use size of smaller team
+            const ownTeamSize = status.team ? teamsSizes[status.team - 1] : Math.min(...teamsSizes);
+
+            if (!bot.isEnabled() && filledSlots < slots && population < maxPopulation) {
+                // Enable if desired number of slots is currently not filled on the server and overpopulate max has not been reached yet
+                this.logger.info('has slots to fill, enabling', config.basename, slots, filledSlots, maxPopulation, population);
                 bot.setEnabled(true);
             }
-            else if (bot.isEnabled() && (filledSlots > slots || enabledBots > maxPopulation)) {
-                // Disable if desired number of slots or overpopulate max has been exceeded
-                this.logger.info('has too many slots filled/bots running, disabling', config.basename, slots, filledSlots, maxPopulation, enabledBots);
+            else if (bot.isEnabled() && status.onServer && ownTeamSize > slots / 2 && filledSlots > slots) {
+                // Disable if on server, own team size is greater than half the current slots and desired number of slots has been exceeded
+                this.logger.info('has too many slots filled, disabling', config.basename, slots, filledSlots, maxPopulation, population);
+                bot.setEnabled(false);
+            }
+            else if (bot.isEnabled() && !status.onServer && population > maxPopulation) {
+                // Disable if not on server and overpopulate max has been exceeded
+                this.logger.info('has too many bots running, disabling', config.basename, slots, filledSlots, maxPopulation, population);
                 bot.setEnabled(false);
             }
             else if (bot.isEnabled() && !status.onServer && filledSlots == slots) {
                 // Disable if bot is not on server but desired number of slots has been filled
-                this.logger.info('is filled up, disabling', config.basename, slots, filledSlots, maxPopulation, enabledBots);
+                this.logger.info('is filled up, disabling', config.basename, slots, filledSlots, maxPopulation, population);
                 bot.setEnabled(false);
             }
 
@@ -183,7 +197,7 @@ class Server {
     }
 
     private async getSlotStatus(): Promise<ServerSlotStatus> {
-        const server = await this.httpClient.get(
+        const server: BflistServer = await this.httpClient.get(
             getStatusCheckURL(this.config.address, this.config.port),
             { ttl: Config.STATUS_CACHE_TTL }
         );
@@ -191,7 +205,7 @@ class Server {
         // Check which bots are on server based on the data here rather than based on the bots own status tracking
         // in order to avoid mismatches in filled slot values based on slightly apart status update requests
         const botNicknames = this.bots.map((b: Bot) => b.getConfig().nickname);
-        const botsOnServer = server.players.filter((p: any) => botNicknames.includes(p.name));
+        const botsOnServer = server.players.filter((p: BflistPlayer) => botNicknames.includes(p.name));
 
         return {
             filledTotal: server.numPlayers,

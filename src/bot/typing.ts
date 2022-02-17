@@ -6,6 +6,7 @@ export type BotStatus = {
     botRunning: boolean
     cliReady: boolean
     onServer?: boolean
+    team?: number
     processStartedAt?: moment.Moment
     botStartedAt?: moment.Moment
     onServerLastCheckedAt?: moment.Moment
