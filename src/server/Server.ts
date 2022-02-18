@@ -170,7 +170,7 @@ class Server {
                 // Slots are available and timeout has either passed or is not relevant (since timestamp not set)
                 this.logger.info('has more slots available than are currently configured, increasing current slots', availableSlots, currentSlots, slotStatus.filledByBots);
                 // Increase current slots to either the number for available slots of the max number of bots
-                this.setCurrentSlots(availableSlots);
+                this.setCurrentSlots(Math.min(availableSlots, this.config.slots));
                 // Reset slot timeout timer
                 delete this.status.availableSlotsFreeSince;
             }
