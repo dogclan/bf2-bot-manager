@@ -1,8 +1,8 @@
-import {AxiosInstance} from 'axios';
-import {Logger} from 'tslog';
+import { AxiosInstance } from 'axios';
+import { Logger } from 'tslog';
 import Config from '../config';
 import logger from '../logger';
-import {CachedRequestConfig} from './typing';
+import { CachedRequestConfig } from './typing';
 import RedisCache from './RedisCache';
 import CachedJSON from './CachedJSON';
 

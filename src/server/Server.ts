@@ -1,12 +1,12 @@
 import Bot from '../bot/Bot';
-import {ServerConfig, ServerSlotStatus, ServerStatus} from './typing';
-import {getStatusCheckURL, getTeamSizes, sleep} from '../utility';
-import {Logger} from 'tslog';
+import { ServerConfig, ServerSlotStatus, ServerStatus } from './typing';
+import { getStatusCheckURL, getTeamSizes, sleep } from '../utility';
+import { Logger } from 'tslog';
 import logger from '../logger';
 import moment from 'moment';
 import Config from '../config';
-import {CachedHttpClient} from '../http/CachedHttpClient';
-import {BflistPlayer, BflistServer} from '../http/typing';
+import { CachedHttpClient } from '../http/CachedHttpClient';
+import { BflistPlayer, BflistServer } from '../http/typing';
 
 class Server {
     private httpClient: CachedHttpClient;
