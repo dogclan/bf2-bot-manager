@@ -1,25 +1,25 @@
-import {Client, CommandInteraction, Intents, Interaction} from 'discord.js';
+import { Client, CommandInteraction, Intents, Interaction } from 'discord.js';
 import fs from 'fs';
 import yaml from 'js-yaml';
-import {Schema, ValidationError, Validator} from 'jsonschema';
+import { Schema, ValidationError, Validator } from 'jsonschema';
 import cron from 'node-cron';
 import path from 'path';
-import {Logger} from 'tslog';
+import { Logger } from 'tslog';
 import Bot from './bot/Bot';
 import BotConfig from './bot/BotConfig';
-import {clear} from './commands/clear';
-import {fill} from './commands/fill';
-import {setSlots} from './commands/setSlots';
-import {status} from './commands/status';
-import {Command} from './commands/typing';
+import { clear } from './commands/clear';
+import { fill } from './commands/fill';
+import { setSlots } from './commands/setSlots';
+import { status } from './commands/status';
+import { Command } from './commands/typing';
 import Config from './config';
 import logger from './logger';
 import Server from './server/Server';
-import {ServerBotConfig, Task} from './typing';
-import {readFileAsync} from './utility';
+import { ServerBotConfig, Task } from './typing';
+import { readFileAsync } from './utility';
 import axios from 'axios';
 import RedisCache from './http/RedisCache';
-import {CachedHttpClient} from './http/CachedHttpClient';
+import { CachedHttpClient } from './http/CachedHttpClient';
 
 type BotManagerTasks = {
     botMaintenance: Task

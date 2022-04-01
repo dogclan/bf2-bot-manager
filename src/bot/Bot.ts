@@ -1,15 +1,15 @@
-import {ChildProcessWithoutNullStreams, spawn} from 'child_process';
+import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import moment from 'moment';
 import cron from 'node-cron';
-import {Logger} from 'tslog';
+import { Logger } from 'tslog';
 import logger from '../logger';
-import {Task} from '../typing';
-import {getStatusCheckURL, sleep} from '../utility';
+import { Task } from '../typing';
+import { getStatusCheckURL, sleep } from '../utility';
 import BotConfig from './BotConfig';
-import {BotStatus} from './typing';
-import {CachedHttpClient} from '../http/CachedHttpClient';
+import { BotStatus } from './typing';
+import { CachedHttpClient } from '../http/CachedHttpClient';
 import Config from '../config';
-import {BflistPlayer, BflistServer} from '../http/typing';
+import { BflistPlayer, BflistServer } from '../http/typing';
 
 type BotExeCommand = 'start' | 'stop'
 type BotTasks = {

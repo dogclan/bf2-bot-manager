@@ -1,8 +1,8 @@
 import fs from 'fs';
 import glob from 'glob';
-import {promisify} from 'util';
-import {BflistPlayer} from './http/typing';
-import {TeamSizes} from './typing';
+import { promisify } from 'util';
+import { BflistPlayer } from './http/typing';
+import { TeamSizes } from './typing';
 
 export const globAsync = promisify(glob.glob);
 export const mkdirAsync = promisify(fs.mkdir);
@@ -34,7 +34,7 @@ export function getStatusCheckURL(ip: string, port: number): string {
 }
 
 export function getBotName(basename: string, currentName?: string): string {
-    const numbers = Array.from({length: 16}, (x, i) => i);
+    const numbers = Array.from({ length: 16 }, (x, i) => i);
 
     if (currentName) {
         const currentNumber = Number(currentName.split('^').pop());
