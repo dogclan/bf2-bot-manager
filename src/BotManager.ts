@@ -23,7 +23,7 @@ import {CachedHttpClient} from './http/CachedHttpClient';
 
 type BotManagerTasks = {
     botMaintenance: Task
-    freeSlotCheck: Task
+    slotMaintenance: Task
 }
 
 class BotManager {
@@ -88,15 +88,23 @@ class BotManager {
                     scheduled: false
                 })
             },
-            freeSlotCheck: {
+            slotMaintenance: {
                 running: false,
                 schedule: cron.schedule('10,30,50 * * * * *', async () => {
-                    if (this.tasks.freeSlotCheck.running) {
-                        this.logger.warn('Free slot check is already running, skipping');
+                    if (this.tasks.slotMaintenance.running) {
+                        this.logger.warn('Slot maintenance is already running, skipping');
+                    }
+                    this.tasks.slotMaintenance.running = true;
+
+                    this.logger.debug('Running bot team balance check');
+                    try {
+                        await Promise.allSettled(this.servers.map((s: Server) => s.ensureTeamBalance()));
+                    }
+                    catch (e: any) {
+                        this.logger.error('Encountered an error during bot team balance check', e.message);
                     }
 
                     this.logger.debug('Running free slot check');
-                    this.tasks.freeSlotCheck.running = true;
                     try {
                         await Promise.allSettled(this.servers.map((s: Server) => s.ensureReservedSlots()));
                     }
@@ -104,8 +112,10 @@ class BotManager {
                         this.logger.debug('Encountered an error during free slot check', e.message);
                     }
                     finally {
-                        this.tasks.freeSlotCheck.running = false;
+                        this.tasks.slotMaintenance.running = false;
                     }
+                }, {
+                    scheduled: false
                 })
             }
         };
@@ -170,7 +180,7 @@ class BotManager {
 
         // Start tasks
         this.tasks.botMaintenance.schedule.start();
-        this.tasks.freeSlotCheck.schedule.start();
+        this.tasks.slotMaintenance.schedule.start();
 
         this.botLaunchComplete = true;
     }
@@ -246,7 +256,7 @@ class BotManager {
 
     public async shutdown(): Promise<void> {
         this.tasks.botMaintenance.schedule.stop();
-        this.tasks.freeSlotCheck.schedule.stop();
+        this.tasks.slotMaintenance.schedule.stop();
 
         for (const server of this.servers) {
             for (const bot of server.getBots()) {

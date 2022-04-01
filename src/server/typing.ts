@@ -5,13 +5,15 @@ export type ServerConfig = {
     address: string
     port: number
     slots: number
-    reservedSlots?: number
+    reservedSlots: number
     currentSlots?: number
 }
 
 export type ServerStatus = {
     currentSlotsTakenSince?: moment.Moment
     availableSlotsFreeSince?: moment.Moment
+    autobalanceInProgress?: boolean
+    autobalanceStartedAt?: moment.Moment
 }
 
 export type ServerSlotStatus = {

@@ -18,6 +18,7 @@ export default abstract class Config {
     static readonly BOT_SLOT_TIMEOUT = Number(process.env.BOT_SLOT_TIMEOUT) || 60;
     static readonly RESERVED_SLOT_TIMEOUT = Number(process.env.RESERVED_SLOT_TIMEOUT) || 240;
     static readonly OVERPOPULATE_FACTOR = Number(process.env.OVERPOPULATE_FACTOR) || 2;
+    static readonly AUTOBALANCE_MAX_DURATION = Number(process.env.AUTOBALANCE_MAX_DURATION) || 240;
 
     static readonly TOKEN: string = process.env.TOKEN || '';
     static readonly COMMAND_PERMISSIONS: CommandPermissionSet[] = [

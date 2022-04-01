@@ -1,6 +1,6 @@
 import Bot from '../bot/Bot';
 import {ServerConfig, ServerSlotStatus, ServerStatus} from './typing';
-import {getStatusCheckURL, sleep} from '../utility';
+import {getStatusCheckURL, getTeamSizes, sleep} from '../utility';
 import {Logger} from 'tslog';
 import logger from '../logger';
 import moment from 'moment';
@@ -129,11 +129,6 @@ class Server {
     }
 
     public async ensureReservedSlots(initialCheck = false): Promise<void> {
-        // Skip check if server does not have reserved slots set up (or number of reserved slots is 0)
-        if (!this.config.reservedSlots) {
-            return;
-        }
-
         const currentSlots = this.getCurrentSlots();
         const slotStatus = await this.getSlotStatus();
         // Ignore any negative results, as the worst case should be 0 available slots
@@ -144,6 +139,11 @@ class Server {
         // Keep number of slots even
         const availableSlots = availableSlotsRaw - availableSlotsRaw % 2;
 
+        /**
+         * Reserved slot manager somewhat "collides" with autobalance. We need to avoid increasing slots while
+         * autobalance is in progress. Else we might re-fill an unbalanced team due to slots freeing up. However, we
+         * may need to free up more slots than autobalance freed up to make sure the reserved slots stay available.
+         */
         if (availableSlots < currentSlots) {
             // Slots need to be freed, figure out whether to decrease current slots now or later
             if (initialCheck || moment().diff(this.status.currentSlotsTakenSince, 'seconds') > Config.BOT_SLOT_TIMEOUT) {
@@ -156,7 +156,7 @@ class Server {
             }
             else if (this.status.currentSlotsTakenSince) {
                 // Slots need to be freed but have not timed out yet => just wait
-                this.logger.info('has too many slots configured, waiting for bot slots to time out', this.status.currentSlotsTakenSince.toISOString(), Config.BOT_SLOT_TIMEOUT);
+                this.logger.debug('has too many slots configured, waiting for bot slots to time out', this.status.currentSlotsTakenSince.toISOString(), Config.BOT_SLOT_TIMEOUT);
             }
             else {
                 // Players just joined => start timeout before freeing up slots
@@ -164,8 +164,8 @@ class Server {
                 this.status.currentSlotsTakenSince = moment();
             }
         }
-        else if (availableSlots > currentSlots && currentSlots < this.config.slots) {
-            // Slots are available, figure out whether to increase current slots now or later
+        else if (availableSlots > currentSlots && currentSlots < this.config.slots && !this.status.autobalanceInProgress) {
+            // Slots are available and autobalance is not in progress, figure out whether to increase current slots now or later
             if (moment().diff(this.status.availableSlotsFreeSince, 'seconds') > Config.RESERVED_SLOT_TIMEOUT) {
                 // Slots are available and timeout has either passed or is not relevant (since timestamp not set)
                 this.logger.info('has more slots available than are currently configured, increasing current slots', availableSlots, currentSlots, slotStatus.filledByBots);
@@ -176,7 +176,7 @@ class Server {
             }
             else if (this.status.availableSlotsFreeSince) {
                 // Slots are available but timeout is set and has not passed => just wait
-                this.logger.info('has slots available, waiting for reserved slot to time out', this.status.availableSlotsFreeSince.toISOString(), Config.RESERVED_SLOT_TIMEOUT);
+                this.logger.debug('has slots available, waiting for reserved slot to time out', this.status.availableSlotsFreeSince.toISOString(), Config.RESERVED_SLOT_TIMEOUT);
             }
             else {
                 // Slots are available and timeout is not set => set it now to start timer
@@ -189,29 +189,81 @@ class Server {
             this.logger.info('had missing slots freed by player(s) during timeout');
             delete this.status.currentSlotsTakenSince;
         }
-        else if (availableSlots == currentSlots && this.status.availableSlotsFreeSince) {
+        else if (availableSlots == currentSlots && this.status.availableSlotsFreeSince && !this.status.autobalanceInProgress) {
             // Slots were filled by players while we waited for timeout to pass => unset timer
             this.logger.info('had available slots taken by player(s) during timeout');
             delete this.status.availableSlotsFreeSince;
         }
+        else if (availableSlots == currentSlots && this.status.availableSlotsFreeSince) {
+            // Slots were filled during autobalance => unset timer
+            this.logger.info('had available slots taken by player(s) during autobalance');
+        }
+    }
+
+    public async ensureTeamBalance(): Promise<void> {
+        const server: BflistServer = await this.fetchServerStatus();
+        const botsOnServer = this.getBotsOnServer(server);
+        const playersOnServer = this.getPlayersOnServer(server);
+
+        const playerTeamsSizes = getTeamSizes(playersOnServer);
+        const botTeamsSizes = getTeamSizes(botsOnServer);
+
+        // TODO Player teams don't need to be even. Can be even or have more players on the index 0 team (since players will always join index 1 first)
+        if (botsOnServer.length == this.getCurrentSlots() && botTeamsSizes.delta > 0) {
+            this.logger.info('bots are split unevenly across teams, reducing bot slots to balance', botsOnServer.length, botTeamsSizes.bigger, botTeamsSizes.smaller);
+            this.status.autobalanceInProgress = true;
+            this.status.autobalanceStartedAt = moment();
+            this.setCurrentSlots(Math.min(botTeamsSizes.smaller * 2, this.config.slots));
+        }
+        else if (botsOnServer.length != this.getCurrentSlots() && botTeamsSizes.delta > 0) {
+            this.logger.debug('bots are split unevenly across teams, waiting for slots to be filled/freed', botsOnServer.length, botTeamsSizes.bigger, botTeamsSizes.smaller);
+        }
+        else if (botsOnServer.length == this.getCurrentSlots() && botTeamsSizes.delta == 0 && playerTeamsSizes.delta == 0 && this.status.autobalanceInProgress) {
+            this.logger.info('autobalance complete, teams are even again', botsOnServer.length, botTeamsSizes.bigger, botTeamsSizes.smaller, playerTeamsSizes.bigger, playerTeamsSizes.smaller);
+            this.status.autobalanceInProgress = false;
+            delete this.status.autobalanceStartedAt;
+        }
+        else if (botsOnServer.length == this.getCurrentSlots() && botTeamsSizes.delta == 0 &&
+            moment().diff(this.status.autobalanceStartedAt, 'seconds') > Config.AUTOBALANCE_MAX_DURATION && this.status.autobalanceInProgress)
+        {
+            this.logger.info('autobalance max duration reached, aborting autobalance attempt despite player teams being uneven',
+                botsOnServer.length, botTeamsSizes.bigger, botTeamsSizes.smaller, playerTeamsSizes.bigger, playerTeamsSizes.smaller);
+            this.status.autobalanceInProgress = false;
+            delete this.status.autobalanceStartedAt;
+        }
+        else {
+            this.logger.debug('bots are split evenly across teams', botsOnServer.length, botTeamsSizes.bigger, botTeamsSizes.smaller);
+        }
     }
 
     private async getSlotStatus(): Promise<ServerSlotStatus> {
-        const server: BflistServer = await this.httpClient.get(
-            getStatusCheckURL(this.config.address, this.config.port),
-            { ttl: Config.STATUS_CACHE_TTL }
-        );
-
+        const server: BflistServer = await this.fetchServerStatus();
         // Check which bots are on server based on the data here rather than based on the bots own status tracking
         // in order to avoid mismatches in filled slot values based on slightly apart status update requests
-        const botNicknames = this.bots.map((b: Bot) => b.getConfig().nickname);
-        const botsOnServer = server.players.filter((p: BflistPlayer) => botNicknames.includes(p.name));
+        const botsOnServer = this.getBotsOnServer(server);
 
         return {
             filledTotal: server.numPlayers,
             filledByBots: botsOnServer.length,
             max: server.maxPlayers
         };
+    }
+
+    private async fetchServerStatus(): Promise<BflistServer> {
+        return this.httpClient.get(
+            getStatusCheckURL(this.config.address, this.config.port),
+            { ttl: Config.STATUS_CACHE_TTL }
+        );
+    }
+
+    private getBotsOnServer(server: BflistServer): BflistPlayer[] {
+        const botNicknames = this.bots.map((b: Bot) => b.getConfig().nickname);
+        return server.players.filter((p: BflistPlayer) => botNicknames.includes(p.name));
+    }
+
+    private getPlayersOnServer(server: BflistServer): BflistPlayer[] {
+        const botNicknames = this.bots.map((b: Bot) => b.getConfig().nickname);
+        return server.players.filter((p: BflistPlayer) => !botNicknames.includes(p.name));
     }
 
     public getConfig(): ServerConfig {
