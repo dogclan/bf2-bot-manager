@@ -10,7 +10,7 @@ export type BotServer = {
 
 export type ServerBotConfig = BotServer & {
     slots: number
-    reservedSlots?: number
+    reservedSlots: number
     bots: BotBaseConfig[]
 }
 
@@ -27,4 +27,10 @@ export type CommandPermissionSet = {
 export type Task = {
     running?: boolean
     schedule: cron.ScheduledTask
+}
+
+export type TeamSizes = {
+    smaller: number
+    bigger: number
+    delta: number
 }

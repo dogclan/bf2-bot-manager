@@ -1,6 +1,8 @@
 import fs from 'fs';
 import glob from 'glob';
 import {promisify} from 'util';
+import {BflistPlayer} from './http/typing';
+import {TeamSizes} from './typing';
 
 export const globAsync = promisify(glob.glob);
 export const mkdirAsync = promisify(fs.mkdir);
@@ -43,6 +45,21 @@ export function getBotName(basename: string, currentName?: string): string {
     const newNumber = numbers[Math.floor(Math.random() * numbers.length)];
 
     return `${basename}^${Number(newNumber).toString(16)}`;
+}
+
+export function getTeamSizes(players: BflistPlayer[]): TeamSizes {
+    const teamSizes = [
+        players.filter((b: BflistPlayer) => b.team == 1).length,
+        players.filter((b: BflistPlayer) => b.team == 2).length
+    ];
+    const smaller = Math.min(...teamSizes);
+    const bigger = Math.max(...teamSizes);
+
+    return {
+        smaller,
+        bigger,
+        delta: bigger - smaller
+    };
 }
 
 /**
