@@ -128,13 +128,7 @@ class BotManager {
             this.client.user?.presence.set({ status: 'online' });
 
             this.logger.info('Client is ready, registering commands');
-            const commands = await this.client.application!.commands.set(this.commands);
-
-            for (const command of commands.values()) {
-                for (const permissionSet of Config.COMMAND_PERMISSIONS) {
-                    await command.permissions.set({ guild: permissionSet.guild, permissions: permissionSet.permissions });
-                }
-            }
+            await this.client.application!.commands.set(this.commands);
 
             this.logger.info('Initialization complete, listening for commands');
         });

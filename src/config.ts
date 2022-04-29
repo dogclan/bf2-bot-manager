@@ -1,5 +1,4 @@
 import path from 'path';
-import { CommandPermissionSet } from './typing';
 
 export default abstract class Config {
     static readonly ROOT_DIR: string = path.join(__dirname, '..');
@@ -21,22 +20,4 @@ export default abstract class Config {
     static readonly AUTOBALANCE_MAX_DURATION = Number(process.env.AUTOBALANCE_MAX_DURATION) || 240;
 
     static readonly TOKEN: string = process.env.TOKEN || '';
-    static readonly COMMAND_PERMISSIONS: CommandPermissionSet[] = [
-        {
-            // statbits Discord
-            guild: '774680162415018004',
-            permissions: [
-                // developer role
-                { id: '774730250772152382', type: 'ROLE', permission: true }
-            ]
-        },
-        // {
-        //     // =DOG= Discord
-        //     guild: '643138640473489428',
-        //     permissions: [
-        //         // server bot admin role
-        //         { id: '936992348846575666', type: 'ROLE', permission: true }
-        //     ]
-        // }
-    ];
 }
