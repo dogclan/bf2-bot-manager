@@ -115,7 +115,7 @@ class Server {
                 this.logger.info('bot not on server, killing until next iteration', config.basename);
 
                 // Update nickname to avoid server "shadow banning" account by name
-                bot.rotateNickname();
+                await bot.rotateNicknameAndCdKey();
 
                 bot.stop();
                 await bot.waitForStop();

@@ -71,14 +71,18 @@ class BotConfig {
         return writeFileAsync(xmlPath, content.toString());
     }
 
-    rotateNickname(): void {
+    async rotateNickname(writeXml = true): Promise<void> {
         this.nickname = getBotName(this.basename, this.nickname);
-        this.writeXml();
+        if (writeXml) {
+            return this.writeXml();
+        }
     }
 
-    rotateCdKey(): void {
+    async rotateCdKey(writeXml = true): Promise<void> {
         this.cdKey = generateCdkey();
-        this.writeXml();
+        if (writeXml) {
+            return this.writeXml();
+        }
     }
 }
 
