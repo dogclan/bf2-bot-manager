@@ -10,6 +10,7 @@ export type BflistServer = {
     port: number
     numPlayers: number
     maxPlayers: number
+    gameVariant: string
     // omit irrelevant attributes
     players: BflistPlayer[]
 }

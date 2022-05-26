@@ -150,6 +150,10 @@ class Bot {
         // TODO Relaunch if running
     }
 
+    public async updateMod(mod: string): Promise<void> {
+        await this.config.updateMod(mod);
+    }
+
     public isEnabled(): boolean {
         return this.status.enabled;
     }

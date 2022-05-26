@@ -27,12 +27,31 @@ class Server {
 
     public async launchBots(): Promise<void> {
         this.logger.info('launching bots');
+
+        // Get current mod from server status
+        let currentMod: string | undefined;
+        try {
+            this.logger.debug('Fetching current mod');
+            currentMod = await this.getCurrentMod();
+        }
+        catch (e: any) {
+            this.logger.error('Failed to determine current mod, continuing with mod as per launch config', e.message);
+        }
+
         // Only launch as many bots as we have slots right now
         // (currentSlots may have already been set by ensureReservedSlots)
         const slots = this.getCurrentSlots();
         const bots = this.bots.slice(0, slots);
         for (const bot of bots) {
             const config = bot.getConfig();
+
+            // This will only update the mod for bots we are currently launching
+            // (remaining bots will be updated via maintenance)
+            if (currentMod && config.server.mod != currentMod) {
+                this.logger.info('bot is not using the current mod, updating config', config.basename, config.server.mod, currentMod);
+                await bot.updateMod(currentMod);
+            }
+
             try {
                 this.logger.debug('launching bot process for', config.basename);
                 bot.setEnabled(true);
@@ -49,10 +68,29 @@ class Server {
     }
 
     public async maintainBots(): Promise<void> {
+        // Fetch outside the loop to ensure the same value is used for all bots
+        const currentMod = await this.getCurrentMod();
         for (const bot of this.bots) {
             const slots = this.getCurrentSlots();
             const config = bot.getConfig();
             const status = bot.getStatus();
+
+            // Update mod if required
+            if (config.server.mod != currentMod) {
+                this.logger.info('bot is not using the current mod, updating config', config.basename, config.server.mod, currentMod);
+                await bot.updateMod(currentMod);
+
+                if (bot.isLaunched()) {
+                    this.logger.info('updated config for running bot, killing until next iteration');
+                    bot.stop();
+                    await bot.waitForStop();
+
+                    bot.kill();
+
+                    // Running the remaining maintenance steps makes no sense, so skip them
+                    continue;
+                }
+            }
 
             if (moment().diff(status.onServerLastCheckedAt, 'seconds') > Config.BOT_STATUS_UPDATE_TIMEOUT) {
                 this.logger.debug('bot has not updated it\'s status recently, skipping', config.basename);
@@ -247,6 +285,11 @@ class Server {
             filledByBots: botsOnServer.length,
             max: server.maxPlayers
         };
+    }
+
+    private async getCurrentMod(): Promise<string> {
+        const server = await this.fetchServerStatus();
+        return `mods/${server.gameVariant}`;
     }
 
     private async fetchServerStatus(): Promise<BflistServer> {
