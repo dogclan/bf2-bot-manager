@@ -84,6 +84,13 @@ class BotConfig {
             return this.writeXml();
         }
     }
+
+    async updateMod(mod: string, writeXml = true): Promise<void> {
+        this.server.mod = mod;
+        if (writeXml) {
+            return this.writeXml();
+        }
+    }
 }
 
 export default BotConfig;

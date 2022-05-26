@@ -68,7 +68,7 @@ class BotManager {
                 running: false,
                 schedule: cron.schedule('*/2 * * * *', async () => {
                     if (this.tasks.botMaintenance.running) {
-                        this.logger.warn('Bot maintenance is alreay running, skipping');
+                        this.logger.warn('Bot maintenance is already running, skipping');
                         return;
                     }
 

@@ -73,7 +73,7 @@ export function randomString(length: number): string {
     // Declare all characters
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 
-    // Pick characers randomly
+    // Pick characters randomly
     let str = '';
     for (let i = 0; i < length; i++) {
         str += chars.charAt(Math.floor(Math.random() * chars.length));
