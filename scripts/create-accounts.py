@@ -20,7 +20,7 @@ if not os.path.isfile(configPath):
     sys.exit(1)
 
 with open(configPath, 'r') as configFile:
-    config = yaml.load(configFile, yaml.BaseLoader)
+    config = yaml.load(configFile, yaml.Loader)
 
 bots = [bot for server in config for bot in server['bots']]
 
