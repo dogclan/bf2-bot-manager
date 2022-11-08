@@ -54,7 +54,7 @@
     "moment": "^2.29.1",
     "node-cron": "3.0.0",
     "redis": "4.0.3",
-    "tslog": "3.3.1",
+    "tslog": "3.3.4",
     "xmlbuilder2": "3.0.2"
   }
 }
