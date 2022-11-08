@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "private": true,
   "engines": {
-    "node": "16.x"
+    "node": "16.18.1"
   },
   "scripts": {
     "build-ts": "tsc -b",
@@ -32,33 +32,33 @@
   },
   "homepage": "https://github.com/cetteup/bf2-bot-manager#readme",
   "devDependencies": {
-    "@tsconfig/node14": "^1.0.1",
-    "@tsconfig/recommended": "^1.0.1",
-    "@types/glob": "^7.2.0",
-    "@types/js-yaml": "^4.0.5",
-    "@types/minimist": "^1.2.2",
-    "@types/mysql": "^2.15.20",
-    "@types/node-cron": "^3.0.0",
-    "@typescript-eslint/eslint-plugin": "^5.5.0",
-    "@typescript-eslint/parser": "^5.5.0",
-    "eslint": "^8.3.0",
+    "@tsconfig/node14": "1.0.1",
+    "@tsconfig/recommended": "1.0.1",
+    "@types/glob": "7.2.0",
+    "@types/js-yaml": "4.0.5",
+    "@types/minimist": "1.2.2",
+    "@types/mysql": "2.15.20",
+    "@types/node-cron": "3.0.1",
+    "@typescript-eslint/eslint-plugin": "5.10.1",
+    "@typescript-eslint/parser": "5.10.1",
+    "eslint": "8.7.0",
     "minimist": "^1.2.5",
-    "mysql": "^2.18.1",
-    "typescript": "^4.5.2"
+    "mysql": "2.18.1",
+    "typescript": "4.5.5"
   },
   "dependencies": {
-    "@discordjs/builders": "^0.9.0",
-    "@discordjs/rest": "^0.1.0-canary.0",
-    "axios": "^0.24.0",
-    "discord-api-types": "^0.25.2",
-    "discord.js": "^13.3.1",
-    "glob": "^7.2.0",
-    "js-yaml": "^4.1.0",
-    "jsonschema": "^1.4.0",
+    "@discordjs/builders": "0.9.0",
+    "@discordjs/rest": "0.1.0-canary.0",
+    "axios": "0.24.0",
+    "discord-api-types": "0.25.2",
+    "discord.js": "13.6.0",
+    "glob": "7.2.0",
+    "js-yaml": "4.1.0",
+    "jsonschema": "1.4.0",
     "moment": "^2.29.1",
-    "node-cron": "^3.0.0",
-    "redis": "^4.0.3",
-    "tslog": "^3.3.0",
-    "xmlbuilder2": "^3.0.2"
+    "node-cron": "3.0.0",
+    "redis": "4.0.3",
+    "tslog": "3.3.1",
+    "xmlbuilder2": "3.0.2"
   }
 }
