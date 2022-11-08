@@ -23,7 +23,7 @@ services:
     image: "redis:alpine"
     restart: always
 
-    command: redis-server --requirepass the_redis_password
+    command: redis-server /etc/redis/redis.conf --requirepass the_redis_password
 
     volumes:
       - redis:/data
