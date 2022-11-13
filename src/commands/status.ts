@@ -1,5 +1,4 @@
-import { CommandInteraction } from 'discord.js';
-import { ApplicationCommandOptionTypes } from 'discord.js/typings/enums';
+import { ApplicationCommandOptionType, ApplicationCommandType, ChatInputCommandInteraction } from 'discord.js';
 import BotManager from '../BotManager';
 import Server from '../server/Server';
 import { booleanToEnglish } from '../utility';
@@ -8,16 +7,16 @@ import { Command, ServerStatusColumns, StatusOverviewColumns } from './typing';
 export const status: Command = {
     name: 'status',
     description: 'Show status of servers for which bots are controlled by the manager',
-    defaultPermission: false,
+    type: ApplicationCommandType.ChatInput,
     options: [
         {
             name: 'server',
             description: 'Server name to show status for',
-            type: ApplicationCommandOptionTypes.STRING,
+            type: ApplicationCommandOptionType.String,
             required: false
         }
     ],
-    execute: async (interaction: CommandInteraction, manager: BotManager) => {
+    execute: async (interaction: ChatInputCommandInteraction, manager: BotManager) => {
         const serverName = interaction.options.getString('server');
         const servers = manager.getServers().filter((server: Server) => !serverName || server.getConfig().name == serverName);
 

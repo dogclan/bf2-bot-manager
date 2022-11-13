@@ -1,5 +1,4 @@
-import { CommandInteraction } from 'discord.js';
-import { ApplicationCommandOptionTypes } from 'discord.js/typings/enums';
+import { ApplicationCommandOptionType, ApplicationCommandType, ChatInputCommandInteraction } from 'discord.js';
 import BotManager from '../BotManager';
 import Config from '../config';
 import Server from '../server/Server';
@@ -8,22 +7,22 @@ import { Command } from './typing';
 export const setSlots: Command = {
     name: 'set-slots',
     description: 'Temporarily change the number of slots to fill with bots',
-    defaultPermission: false,
+    type: ApplicationCommandType.ChatInput,
     options: [
         {
             name: 'server',
             description: 'Name of server to change number of slots for',
-            type: ApplicationCommandOptionTypes.STRING,
+            type: ApplicationCommandOptionType.String,
             required: true
         },
         {
             name: 'slots',
             description: 'New number of slots to fill with bots',
-            type: ApplicationCommandOptionTypes.NUMBER,
+            type: ApplicationCommandOptionType.Number,
             required: true
         }
     ],
-    execute: async (interaction: CommandInteraction, manager: BotManager) => {
+    execute: async (interaction: ChatInputCommandInteraction, manager: BotManager) => {
         const options = {
             serverName: interaction.options.getString('server', true),
             slots: interaction.options.getNumber('slots', true)
