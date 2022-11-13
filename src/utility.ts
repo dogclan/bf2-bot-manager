@@ -1,10 +1,8 @@
 import fs from 'fs';
-import glob from 'glob';
 import { promisify } from 'util';
 import { BflistPlayer } from './http/typing';
 import { TeamSizes } from './typing';
 
-export const globAsync = promisify(glob.glob);
 export const mkdirAsync = promisify(fs.mkdir);
 export const linkAsync = promisify(fs.link);
 export const readFileAsync = promisify(fs.readFile);
