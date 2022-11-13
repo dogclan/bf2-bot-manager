@@ -1,4 +1,4 @@
-import { Client, CommandInteraction, Intents, Interaction } from 'discord.js';
+import { ChatInputCommandInteraction, Client, Events, GatewayIntentBits, Interaction } from 'discord.js';
 import fs from 'fs';
 import yaml from 'js-yaml';
 import { Schema, ValidationError, Validator } from 'jsonschema';
@@ -120,7 +120,7 @@ class BotManager {
             }
         };
 
-        this.client = new Client({ intents: [Intents.FLAGS.GUILDS] });
+        this.client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
         this.commands = [status, fill, clear, setSlots];
 
@@ -133,8 +133,8 @@ class BotManager {
             this.logger.info('Initialization complete, listening for commands');
         });
 
-        this.client.on('interactionCreate', async (interaction: Interaction) => {
-            if (interaction.isCommand()) {
+        this.client.on(Events.InteractionCreate, async (interaction: Interaction) => {
+            if (interaction.isChatInputCommand()) {
                 try {
                     await this.handleSlashCommand(interaction);
                 }
@@ -273,7 +273,7 @@ class BotManager {
         return this.botLaunchComplete;
     }
 
-    private async handleSlashCommand(interaction: CommandInteraction): Promise<void> {
+    private async handleSlashCommand(interaction: ChatInputCommandInteraction): Promise<void> {
         const slashCommand = this.commands.find(c => c.name === interaction.commandName);
 
         if (!slashCommand) {

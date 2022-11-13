@@ -1,5 +1,4 @@
-import { CommandInteraction } from 'discord.js';
-import { ApplicationCommandOptionTypes } from 'discord.js/typings/enums';
+import { ApplicationCommandOptionType, ApplicationCommandType, ChatInputCommandInteraction } from 'discord.js';
 import BotManager from '../BotManager';
 import Server from '../server/Server';
 import { Command } from './typing';
@@ -7,16 +6,16 @@ import { Command } from './typing';
 export const clear: Command = {
     name: 'clear',
     description: 'Disable all bots (if a server name is given, only bots for that server will be disabled)',
-    defaultPermission: false,
+    type: ApplicationCommandType.ChatInput,
     options: [
         {
             name: 'server',
             description: 'Name of server to disable bots for',
-            type: ApplicationCommandOptionTypes.STRING,
+            type: ApplicationCommandOptionType.String,
             required: false
         }
     ],
-    execute: async (interaction: CommandInteraction, manager: BotManager) => {
+    execute: async (interaction: ChatInputCommandInteraction, manager: BotManager) => {
         if (!manager.isBotLaunchComplete()) {
             await interaction.reply('Not all bots have been launched yet. Please wait until bot launch is complete before changing server settings.');
             return;

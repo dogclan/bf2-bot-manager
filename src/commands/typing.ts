@@ -1,8 +1,8 @@
-import { ChatInputApplicationCommandData, CommandInteraction } from 'discord.js';
+import { ChatInputApplicationCommandData, ChatInputCommandInteraction } from 'discord.js';
 import BotManager from '../BotManager';
 
 export interface Command extends ChatInputApplicationCommandData {
-    execute: (interaction: CommandInteraction, manager: BotManager) => Promise<void>;
+    execute: (interaction: ChatInputCommandInteraction, manager: BotManager) => Promise<void>;
 }
 
 export type Columns = {
