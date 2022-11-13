@@ -1,4 +1,4 @@
-import { createClient, RedisClientType } from '@node-redis/client';
+import { createClient, RedisClientType } from '@redis/client';
 import CachedJSON from './CachedJSON';
 
 class RedisCache {
