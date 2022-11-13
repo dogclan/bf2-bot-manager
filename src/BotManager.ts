@@ -277,7 +277,7 @@ class BotManager {
         const slashCommand = this.commands.find(c => c.name === interaction.commandName);
 
         if (!slashCommand) {
-            interaction.followUp({ content: 'An error has occurred' });
+            await interaction.followUp({ content: 'An error has occurred' });
             return;
         }
 
