@@ -239,7 +239,8 @@ dmypy.json
 # IntelliJ project settings
 .idea/
 
-# Running bot process files
+# Bot files
+resources/
 running/
 
 # Server bot config files
