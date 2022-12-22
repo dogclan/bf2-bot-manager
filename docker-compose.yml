@@ -1,7 +1,7 @@
 version: '3.7'
 services:
-  bot:
-    build: .
+  manager:
+    image: ghcr.io/dogclan/bf2-bot-manager:latest
     restart: always
 
     command: ["./wait-for-it.sh", "redis:6379", "--timeout=60", "--", "node", "dist/index.js"]
