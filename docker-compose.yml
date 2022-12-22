@@ -7,9 +7,11 @@ services:
     command: ["./wait-for-it.sh", "redis:6379", "--timeout=60", "--", "node", "dist/index.js"]
 
     volumes:
+      - ${PWD}/resources:/usr/src/app/resources
       - ${PWD}/config.yaml:/usr/src/app/config.yaml
     environment:
       - LOG_LEVEL=info
+      - MOUNTED_RESOURCES=1 # Resources folder will be mounted into the container, keep this set to 1
       - TOKEN=your_discord_bot_token
       - REDIS_URL=redis://:the_redis_password@redis
     extra_hosts:

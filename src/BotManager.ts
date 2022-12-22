@@ -16,10 +16,11 @@ import Config from './config';
 import logger from './logger';
 import Server from './server/Server';
 import { ServerBotConfig, Task } from './typing';
-import { readFileAsync } from './utility';
+import { copyAsync, mkdirAsync, readFileAsync } from './utility';
 import axios from 'axios';
 import RedisCache from './http/RedisCache';
 import { CachedHttpClient } from './http/CachedHttpClient';
+import Constants from './constants';
 
 type BotManagerTasks = {
     botMaintenance: Task
@@ -165,6 +166,14 @@ class BotManager {
             process.exit(1);
         }
 
+        try {
+            await this.initializeResources();
+        }
+        catch (e: any) {
+            this.logger.fatal('Failed to initialize resources');
+            process.exit(1);
+        }
+
         await this.initializeServers(serverBotConfigs);
 
         // Run ensureReservedSlots once to make sure we don't initially fill the server up beyond the limit
@@ -177,6 +186,26 @@ class BotManager {
         this.tasks.slotMaintenance.schedule.start();
 
         this.botLaunchComplete = true;
+    }
+
+    private async initializeResources(): Promise<void> {
+        if (!Config.MOUNTED_RESOURCES) {
+            // No point in copying resources that are available locally
+            return;
+        }
+
+        // Ensure local resource folder exists
+        const localResourceDir = path.join(Config.ROOT_DIR, 'resources-local');
+        if (!fs.existsSync(localResourceDir)) {
+            await mkdirAsync(localResourceDir, { recursive: true });
+        }
+
+        // Copy resources from mounted folder
+        for (const binaryFilename of Constants.RESOURCE_BINARIES) {
+            const binaryTargetPath = path.join(localResourceDir, binaryFilename);
+            const binarySourcePath = path.join(Config.RESOURCE_DIR, binaryFilename);
+            await copyAsync(binarySourcePath, binaryTargetPath);
+        }
     }
 
     private async initializeServers(serverBotConfigs: ServerBotConfig[]): Promise<void> {

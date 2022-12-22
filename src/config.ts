@@ -11,6 +11,8 @@ export default abstract class Config {
     static readonly REDIS_KEY_PREFIX = process.env.REDIS_KEY_PREFIX ?? '';
     static readonly STATUS_CACHE_TTL = Number(process.env.STATUS_CACHE_TTL ?? 18);
 
+    static readonly MOUNTED_RESOURCES = !!Number(process.env.MOUNTED_RESOURCES) || false;
+
     static readonly BOT_JOIN_TIMEOUT = Number(process.env.BOT_JOIN_TIMEOUT) || 300;
     static readonly BOT_ON_SERVER_TIMEOUT = Number(process.env.BOT_ON_SERVER_TIMEOUT) || 180;
     static readonly BOT_STATUS_UPDATE_TIMEOUT = Number(process.env.BOT_STATUS_UPDATE_TIMEOUT) || 30;

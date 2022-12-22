@@ -71,6 +71,7 @@ class Server {
         // Fetch outside the loop to ensure the same value is used for all bots
         const currentMod = await this.getCurrentMod();
         for (const bot of this.bots) {
+            // TODO Stop running maintenance once shutdown started
             const slots = this.getCurrentSlots();
             const config = bot.getConfig();
             const status = bot.getStatus();

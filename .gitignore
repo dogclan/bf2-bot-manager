@@ -241,6 +241,7 @@ dmypy.json
 
 # Bot files
 resources/
+resources-local/
 running/
 
 # Server bot config files

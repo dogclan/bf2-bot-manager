@@ -5,6 +5,7 @@ import { TeamSizes } from './typing';
 
 export const mkdirAsync = promisify(fs.mkdir);
 export const linkAsync = promisify(fs.link);
+export const copyAsync = promisify(fs.copyFile);
 export const readFileAsync = promisify(fs.readFile);
 export const writeFileAsync = promisify(fs.writeFile);
 

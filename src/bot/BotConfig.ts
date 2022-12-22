@@ -40,11 +40,13 @@ class BotConfig {
             await mkdirAsync(this.cwd, { recursive: true });
         }
 
-        // Make sure .exe and .dll files from /resouces are linked into the running folder
+        const resourceDir = Config.MOUNTED_RESOURCES ? path.join(Config.ROOT_DIR, 'resources-local') : Config.RESOURCE_DIR;
+
+        // Make sure .exe and .dll files from resources are linked into the running folder
         for (const binaryFilename of Constants.RESOURCE_BINARIES) {
             const binaryTargetPath = path.join(this.cwd, binaryFilename);
             if (!fs.existsSync(binaryTargetPath)) {
-                const binarySourcePath = path.join(Config.RESOURCE_DIR, binaryFilename);
+                const binarySourcePath = path.join(resourceDir, binaryFilename);
                 await linkAsync(binarySourcePath, binaryTargetPath);
             }
         }
