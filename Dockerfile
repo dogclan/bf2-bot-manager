@@ -1,6 +1,6 @@
 FROM node:16.18.1
 RUN apt update
-RUN apt-get install --no-install-recommends --assume-yes wine
+RUN apt install --no-install-recommends --assume-yes wine
 RUN dpkg --add-architecture i386
 RUN apt update
 RUN apt install --no-install-recommends --assume-yes wine32
