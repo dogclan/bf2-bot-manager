@@ -28,9 +28,9 @@
   "author": "cetteup",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/cetteup/bf2-bot-manager/issues"
+    "url": "https://github.com/dogclan/bf2-bot-manager/issues"
   },
-  "homepage": "https://github.com/cetteup/bf2-bot-manager#readme",
+  "homepage": "https://github.com/dogclan/bf2-bot-manager#readme",
   "devDependencies": {
     "@tsconfig/node14": "1.0.3",
     "@tsconfig/recommended": "1.0.1",
