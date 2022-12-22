@@ -10,7 +10,9 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm install -g npm@latest --update-notifier=false
+
+RUN npm install --update-notifier=false
 
 ADD . /usr/src/app
 
