@@ -54,8 +54,10 @@ while len(serverConfigToAdd['bots']) < numberOfBotsToAdd:
         if resp.ok:
             parsed = resp.json()
             for tag in parsed['data']:
-                if tag['name'] not in existingBotNames and len(serverConfigToAdd['bots']) < numberOfBotsToAdd:
+                if len(serverConfigToAdd['bots']) < numberOfBotsToAdd and \
+                        len(tag['name']) <= 16 and tag['name'] not in existingBotNames:
                     serverConfigToAdd['bots'].append({'basename': tag['name'], 'password': args.bot_password})
+                    existingBotNames.append(tag['name'])
         else:
             print(f'Failed to fetch bot names, server responded with HTTP/{resp.status_code}')
             sys.exit(1)
