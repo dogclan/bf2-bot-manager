@@ -1,0 +1,30 @@
+- name: primary-server
+  address: 1.1.1.1
+  port: 16567
+  mod: mods/bf2
+  slots: 2
+  reservedSlots: 6
+  bots:
+  - basename: IffyToy
+    password: secure1
+  - basename: Unowfi
+    password: secure2
+  - basename: TheborgGenius
+    password: secure3
+  - basename: Novache
+    password: secure4
+- name: secondary-server
+  address: 1.1.1.1
+  port: 16568
+  mod: mods/bf2
+  slots: 2
+  reservedSlots: 6
+  bots:
+    - basename: DutifulLean
+      password: secure1
+    - basename: RomaineXray
+      password: secure2
+    - basename: DoubleAbove
+      password: secure3
+    - basename: EconomicsFox
+      password: secure4
