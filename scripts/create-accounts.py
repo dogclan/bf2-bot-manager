@@ -1,17 +1,40 @@
 import argparse
 import getpass
+import os
 import pathlib
+import sqlite3
+import sys
+from enum import Enum
+from typing import List
 
 import mysql.connector
-import os
-import sys
 import yaml
 
-parser = argparse.ArgumentParser(description='Generate bot accounts in MySQL table')
-parser.add_argument('--host', help='MySQL hostname/ip address', type=str, required=True)
-parser.add_argument('--port', help='MySQL listen port', type=int, default=3306)
-parser.add_argument('--user', help='MySQL user to login as', type=str, required=True)
+
+class DatabaseBackend(str, Enum):
+    MySQL = 'mysql'
+    SQLite = 'sqlite'
+
+
+def prepare_statement(table: str, columns: List[str], backend: DatabaseBackend) -> str:
+    if backend is DatabaseBackend.MySQL:
+        placeholders = [f'%({c})s' for c in columns]
+    else:
+        placeholders = [f':{c}' for c in columns]
+
+    return f'INSERT INTO {table} ({", ".join(columns)}) VALUES ({", ".join(placeholders)})'
+
+
+parser = argparse.ArgumentParser(description='Generate bot accounts in MySQL/SQLite table')
 parser.add_argument('--config', help='Path to bot server configs (config.yaml)', type=str, required=True)
+subparsers = parser.add_subparsers(title='Database backend type', dest='backend', required=True)
+mysqlParser = subparsers.add_parser(DatabaseBackend.MySQL)
+mysqlParser.add_argument('--host', help='MySQL hostname/ip address', type=str, required=True)
+mysqlParser.add_argument('--port', help='MySQL listen port', type=int, default=3306)
+mysqlParser.add_argument('--user', help='MySQL user to login as', type=str, required=True)
+sqliteParser = subparsers.add_parser(DatabaseBackend.SQLite)
+sqliteParser.add_argument('--database', help='Path to SQLite database file', required=True)
+
 args = parser.parse_args()
 
 configPath = pathlib.Path(args.config).absolute()
@@ -24,16 +47,28 @@ with open(configPath, 'r') as configFile:
 
 bots = [bot for server in config for bot in server['bots']]
 
-password = getpass.getpass(f'Please enter the mysql password for "{args.user}": ')
+try:
+    backend = DatabaseBackend(args.backend)
+except ValueError:
+    print('Unknown database backend type')
+    sys.exit(1)
 
-connection = mysql.connector.connect(
-    host=args.host,
-    port=args.port,
-    user=args.user,
-    passwd=password,
-    database='bf2gs'
-)
-cursor = connection.cursor(dictionary=True)
+if backend is DatabaseBackend.MySQL:
+    password = getpass.getpass(f'Please enter the mysql password for "{args.user}": ')
+
+    connection = mysql.connector.connect(
+        host=args.host,
+        port=args.port,
+        user=args.user,
+        passwd=password,
+        database='bf2gs'
+    )
+    cursor = connection.cursor(dictionary=True)
+else:
+    connection = sqlite3.connect(args.database)
+    connection.row_factory = sqlite3.Row
+
+    cursor = connection.cursor()
 
 # Get last pid
 sql = 'SELECT id FROM accounts ORDER BY id DESC LIMIT 1'
@@ -53,8 +88,11 @@ for bot in bots:
     for i in range(0, 16):
         lastPid += 1
         name = f'{basename}^{i:x}'
-        sql = 'INSERT INTO accounts (id, name, password, email, country) ' \
-              'VALUES (%(id)s, %(name)s, %(password)s, %(email)s, %(country)s)'
+        sql = prepare_statement(
+            'accounts',
+            ['id', 'name', 'password', 'email', 'country'],
+            backend
+        )
         try:
             cursor.execute(sql, {
                 'id': lastPid,
@@ -66,6 +104,10 @@ for bot in bots:
             connection.commit()
         except mysql.connector.errors.Error as e:
             if 'Duplicate entry' not in str(e):
+                print(e)
+                errors += 1
+        except sqlite3.IntegrityError as e:
+            if 'UNIQUE constraint failed' not in str(e):
                 print(e)
                 errors += 1
 
