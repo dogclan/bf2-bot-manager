@@ -1,10 +1,20 @@
 import argparse
 import os
 import pathlib
+import secrets
+import string
 import sys
 
 import requests
 import yaml
+
+
+ALPHABET = string.ascii_letters + string.digits
+
+
+def generate_password(length: int = 10) -> str:
+    return ''.join(secrets.choice(ALPHABET) for i in range(length))
+
 
 parser = argparse.ArgumentParser(description='Generate server configuration (including bots) '
                                              'and add it to a given config file')
@@ -18,7 +28,6 @@ parser.add_argument('--slots', help='Number of slots to fill with bots', type=in
 parser.add_argument('--reserved-slots', help='Number of slots to keep free for real players', type=int, required=True)
 parser.add_argument('--overpopulate-factor', help='Maximum factor to determine how many bots may be launched '
                                                   'beyond the desired slot count', type=int, default=2)
-parser.add_argument('--bot-password', help='Password to use for bot accounts', type=str, default='gas')
 args = parser.parse_args()
 
 configPath = pathlib.Path(args.config).absolute()
@@ -56,7 +65,10 @@ while len(serverConfigToAdd['bots']) < numberOfBotsToAdd:
             for tag in parsed['data']:
                 if len(serverConfigToAdd['bots']) < numberOfBotsToAdd and \
                         len(tag['name']) <= 16 and tag['name'] not in existingBotNames:
-                    serverConfigToAdd['bots'].append({'basename': tag['name'], 'password': args.bot_password})
+                    serverConfigToAdd['bots'].append({
+                        'basename': tag['name'],
+                        'password': generate_password()
+                    })
                     existingBotNames.append(tag['name'])
         else:
             print(f'Failed to fetch bot names, server responded with HTTP/{resp.status_code}')
