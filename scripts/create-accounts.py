@@ -32,6 +32,7 @@ mysqlParser = subparsers.add_parser(DatabaseBackend.MySQL)
 mysqlParser.add_argument('--host', help='MySQL hostname/ip address', type=str, required=True)
 mysqlParser.add_argument('--port', help='MySQL listen port', type=int, default=3306)
 mysqlParser.add_argument('--user', help='MySQL user to login as', type=str, required=True)
+mysqlParser.add_argument('--database', help='MySQL database to add accounts to', required=True)
 sqliteParser = subparsers.add_parser(DatabaseBackend.SQLite)
 sqliteParser.add_argument('--database', help='Path to SQLite database file', required=True)
 
@@ -61,7 +62,7 @@ if backend is DatabaseBackend.MySQL:
         port=args.port,
         user=args.user,
         passwd=password,
-        database='bf2gs'
+        database=args.database
     )
     cursor = connection.cursor(dictionary=True)
 else:
