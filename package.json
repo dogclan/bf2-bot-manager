@@ -1,6 +1,6 @@
 {
   "name": "bf2-bot-manager",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Manage your BF2 idle bots via a Discord bot",
   "main": "dist/index.js",
   "private": true,
