@@ -314,6 +314,10 @@ class Server {
         return this.config;
     }
 
+    public getStatus(): ServerStatus {
+        return this.status;
+    }
+
     // Get the currently applicable number of slots to fill with bots (either config.slots or config.currentSlots)
     public getCurrentSlots(): number {
         return this.config.currentSlots ?? this.config.slots;

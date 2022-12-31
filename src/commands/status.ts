@@ -1,8 +1,14 @@
-import { ApplicationCommandOptionType, ApplicationCommandType, ChatInputCommandInteraction } from 'discord.js';
+import {
+    ApplicationCommandOptionType,
+    ApplicationCommandType,
+    ChatInputCommandInteraction,
+    EmbedBuilder,
+    EmbedField
+} from 'discord.js';
 import BotManager from '../BotManager';
 import Server from '../server/Server';
 import { booleanToEnglish } from '../utility';
-import { Command, ServerStatusColumns, StatusOverviewColumns } from './typing';
+import { Command, ServerStatusColumns } from './typing';
 
 export const status: Command = {
     name: 'status',
@@ -14,10 +20,18 @@ export const status: Command = {
             description: 'Server name to show status for',
             type: ApplicationCommandOptionType.String,
             required: false
+        },
+        {
+            name: 'detailed',
+            description: 'Show detailed, per-bot status',
+            type: ApplicationCommandOptionType.Boolean,
+            required: false
         }
     ],
     execute: async (interaction: ChatInputCommandInteraction, manager: BotManager) => {
         const serverName = interaction.options.getString('server');
+        const detailed = interaction.options.getBoolean('detailed') || false;
+
         const servers = manager.getServers().filter((server: Server) => !serverName || server.getConfig().name == serverName);
 
         if (servers.length == 0) {
@@ -25,31 +39,67 @@ export const status: Command = {
             return;
         }
 
-        let reply: string;
-        if (serverName) {
-            reply = await formatServerStatus(servers[0]);
-        }
-        else {
-            reply = await formatStatusOverview(servers);
-        }
+        const embeds = servers.map((s) => formatServerStatus(s, detailed));
 
         if (!manager.isBotLaunchComplete()) {
-            reply += '\n**Note:** Not all bots have been launched yet, meaning bot/filled slot status may not be up to date.';
+            for (const embed of embeds) {
+                embed.setFooter({
+                    iconURL: 'https://static.cetteup.com/info-yellow.png',
+                    text: 'Not all bots have been launched yet, meaning bot/filled slot status may not be up to date.'
+                });
+            }
         }
 
-        await interaction.reply(reply);
+        await interaction.reply({ embeds });
     }
 };
 
-async function formatServerStatus(server: Server): Promise<string> {
+function formatServerStatus(server: Server, detailed: boolean): EmbedBuilder {
     const config = server.getConfig();
-
-    let formatted = `**Server:** ${config.name}\n`;
-    formatted += `**Slots:** ${config.slots}${config.currentSlots != undefined ? ', temporarily changed to ' + config.currentSlots : ''}\n`;
-
+    const status = server.getStatus();
     const bots = server.getBots();
 
-    formatted += `**Bots on server:** ${bots.filter((b) => b.getStatus().onServer).length}\n\n`;
+    const fields: EmbedField[] = [
+        {
+            name: 'Slots',
+            value: config.currentSlots != undefined && config.currentSlots != config.slots ?
+                `${config.slots}, temporarily changed to ${config.currentSlots}` :
+                `${config.slots}`,
+            inline: true
+        },
+        {
+            name: 'Bots enabled',
+            value: bots.filter((b) => b.getStatus().enabled).length.toString(),
+            inline: true
+        },
+        {
+            name: 'Bots on server',
+            value: bots.filter((b) => b.getStatus().onServer).length.toString(),
+            inline: true
+        },
+        {
+            name: 'Autobalance in progress',
+            value: status.autobalanceInProgress ?
+                `Yes, started ${status.autobalanceStartedAt?.fromNow()}` :
+                'No',
+            inline: true
+        }
+    ];
+
+    const embed = new EmbedBuilder({
+        title: `Status summary for ${config.name}`,
+        fields,
+        author: {
+            name: `${config.address}:${config.port}`,
+            iconURL: 'https://cdn.discordapp.com/icons/377985116758081541/525b59c06d45c14479657638cae8091a.webp',
+            url: `https://www.bf2hub.com/server/${config.address}:${config.port}/`
+        }
+    });
+    embed.setColor('#cf8562');
+
+    if (!detailed) {
+        return embed;
+    }
 
     const longestBotName = bots.slice().sort((a, b) => a.getConfig().basename.length - b.getConfig().basename.length).pop()?.getConfig().basename;
     const columns: ServerStatusColumns = {
@@ -72,7 +122,7 @@ async function formatServerStatus(server: Server): Promise<string> {
     };
 
     // Start markdown embed
-    formatted += '```\n';
+    let formatted = '```\n';
 
     // Add table headers
     let totalWidth = 0;
@@ -105,70 +155,7 @@ async function formatServerStatus(server: Server): Promise<string> {
     // End markdown embed
     formatted += '```';
 
-    return formatted;
-}
+    embed.setDescription(formatted);
 
-async function formatStatusOverview(servers: Server[]): Promise<string> {
-    const longestServerName = servers.slice().sort((a, b) => a.getConfig().name.length - b.getConfig().name.length).pop()?.getConfig().name;
-    const columns: StatusOverviewColumns = {
-        server: {
-            heading: 'Server',
-            width: longestServerName?.length || 10
-        },
-        slots: {
-            heading: 'Slots default',
-            width: 13
-        },
-        reservedSlots: {
-            heading: 'Slots reserved',
-            width: 14
-        },
-        currentSlots: {
-            heading: 'Slots current',
-            width: 13
-        },
-        filledSlots: {
-            heading: 'Slots filled',
-            width: 12
-        }
-    };
-
-    // Start markdown embed
-    let formatted = '```\n';
-
-    // Add table headers
-    let totalWidth = 0;
-    for (const key in columns) {
-        const column = columns[key];
-
-        // Add three spaces of padding between tables
-        column.width = key == 'filledSlots' ? column.width : column.width + 3;
-
-        formatted += column.heading.padEnd(column.width, ' ');
-        totalWidth += column.width;
-    }
-
-    formatted += '\n';
-
-    // Add separator
-    formatted += `${'-'.padEnd(totalWidth, '-')}\n`;
-
-    for (const server of servers) {
-        const config = server.getConfig();
-        const bots = server.getBots();
-        const currentSlots = server.getCurrentSlots();
-        const filledSlots = bots.filter((b) => b.getStatus().onServer).length;
-
-        formatted += config.name.padEnd(columns.server.width, ' ');
-        formatted += String(config.slots).padEnd(columns.slots.width);
-        formatted += String(server.getReservedSlots()).padEnd(columns.reservedSlots.width);
-        formatted += String(currentSlots).padEnd(columns.currentSlots.width);
-        formatted += String(filledSlots).padEnd(columns.filledSlots.width);
-        formatted += '\n';
-    }
-
-    // End markdown embed
-    formatted += '```';
-
-    return formatted;    
+    return embed;
 }
