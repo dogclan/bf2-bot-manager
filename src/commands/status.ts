@@ -35,7 +35,11 @@ export const status: Command = {
         const servers = manager.getServers().filter((server: Server) => !serverName || server.getConfig().name == serverName);
 
         if (servers.length == 0) {
-            await interaction.reply(serverName ? `I do not manage bots for a server called "${serverName}".` : 'No servers are set up.');
+            await interaction.reply(
+                serverName ?
+                    `I do not manage bots for a server called "${serverName}". Try ${manager.getServers().slice(0, 2).map((s) => '"' + s.getConfig().name + '"').join(',')} or use the command without a server name to see all available servers.` :
+                    'No servers are set up.'
+            );
             return;
         }
 
