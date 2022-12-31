@@ -240,6 +240,12 @@ class Server {
     }
 
     public async ensureTeamBalance(): Promise<void> {
+        // Explicitly check for false here, since default (undefined) should mean autobalance is enabled
+        if (this.config.autobalance == false) {
+            this.logger.debug('autobalance is disabled, skipping');
+            return;
+        }
+
         const server: BflistServer = await this.fetchServerStatus();
         const botsOnServer = this.getBotsOnServer(server);
         const playersOnServer = this.getPlayersOnServer(server);

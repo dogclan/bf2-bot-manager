@@ -10,6 +10,7 @@ export type BotServer = {
 export type ServerBotConfig = BotServer & {
     slots: number
     reservedSlots: number
+    autobalance?: boolean
     bots: BotBaseConfig[]
 }
 

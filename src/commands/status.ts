@@ -9,6 +9,7 @@ import BotManager from '../BotManager';
 import Server from '../server/Server';
 import { booleanToEnglish } from '../utility';
 import { Command, ServerStatusColumns } from './typing';
+import { ServerConfig, ServerStatus } from '../server/typing';
 
 export const status: Command = {
     name: 'status',
@@ -83,9 +84,7 @@ function formatServerStatus(server: Server, detailed: boolean): EmbedBuilder {
         },
         {
             name: 'Autobalance in progress',
-            value: status.autobalanceInProgress ?
-                `Yes, started ${status.autobalanceStartedAt?.fromNow()}` :
-                'No',
+            value: formatAutobalanceStatus(config, status),
             inline: true
         }
     ];
@@ -162,4 +161,14 @@ function formatServerStatus(server: Server, detailed: boolean): EmbedBuilder {
     embed.setDescription(formatted);
 
     return embed;
+}
+
+function formatAutobalanceStatus(config: ServerConfig, status: ServerStatus): string {
+    if (config.autobalance == false) {
+        return 'No (disabled)';
+    }
+    if (status.autobalanceInProgress) {
+        return `Yes, started ${status.autobalanceStartedAt?.fromNow()}`;
+    }
+    return 'No';
 }

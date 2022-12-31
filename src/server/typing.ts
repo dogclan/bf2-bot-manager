@@ -7,6 +7,7 @@ export type ServerConfig = {
     slots: number
     reservedSlots: number
     currentSlots?: number
+    autobalance?: boolean
 }
 
 export type ServerStatus = {
