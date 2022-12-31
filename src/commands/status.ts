@@ -62,7 +62,11 @@ export const status: Command = {
 function formatServerStatus(server: Server, detailed: boolean): EmbedBuilder {
     const config = server.getConfig();
     const status = server.getStatus();
-    const bots = server.getBots();
+    // Bots that are neither enabled nor on the server are not of any relevance
+    const bots = server.getBots().filter((b) => {
+        const status = b.getStatus();
+        return status.enabled || status.onServer;
+    });
 
     const fields: EmbedField[] = [
         {
