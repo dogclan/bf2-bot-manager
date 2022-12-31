@@ -66,7 +66,7 @@ function formatServerStatus(server: Server, detailed: boolean): EmbedBuilder {
 
     const fields: EmbedField[] = [
         {
-            name: 'Slots',
+            name: 'Slots to fill',
             value: config.currentSlots != undefined && config.currentSlots != config.slots ?
                 `${config.slots}, temporarily changed to ${config.currentSlots}` :
                 `${config.slots}`,
