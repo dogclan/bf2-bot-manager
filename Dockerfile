@@ -18,7 +18,7 @@ ADD . /usr/src/app
 
 RUN npm run build-ts
 
-RUN npm prune --production
+RUN npm prune --omit=dev
 
 COPY wait-for-it.sh wait-for-it.sh
 RUN chmod +x wait-for-it.sh
