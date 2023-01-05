@@ -4,28 +4,44 @@ services:
     image: ghcr.io/dogclan/bf2-bot-manager:latest
     restart: always
 
-    command: ["./wait-for-it.sh", "redis:6379", "--timeout=60", "--", "node", "dist/index.js"]
+    command: [
+      "./wait-for-it.sh", "redis:6379", "--timeout=60", "--",
+      "./wait-for-it.sh", "dumbspy:29900", "--timeout=10", "--",
+      "node", "dist/index.js"
+    ]
+
+    networks:
+      vpcbr:
+        ipv4_address: 172.28.0.2
 
     volumes:
       - ${PWD}/resources:/usr/src/app/resources
       - ${PWD}/config.yaml:/usr/src/app/config.yaml
+
     environment:
       - LOG_LEVEL=info
       - MOUNTED_RESOURCES=1 # Resources folder will be mounted into the container, keep this set to 1
       - TOKEN=your_discord_bot_token
       - REDIS_URL=redis://:the_redis_password@redis
+
     extra_hosts:
-      - "gpcm.gamespy.com:127.0.0.1"
-      - "gpsp.gamespy.com:127.0.0.1"
-      - "battlefield2.available.gamespy.com:127.0.0.1"
+      - "gpcm.gamespy.com:172.28.0.4"
+      - "gpsp.gamespy.com:172.28.0.4"
+      - "battlefield2.available.gamespy.com:172.28.0.4"
+
     depends_on:
       - redis
+      - dumbspy
 
   redis:
-    image: "redis:alpine"
+    image: redis:alpine
     restart: always
 
     command: redis-server /etc/redis/redis.conf --requirepass the_redis_password
+
+    networks:
+      vpcbr:
+        ipv4_address: 172.28.0.3
 
     volumes:
       - redis:/data
@@ -33,6 +49,22 @@ services:
 
     environment:
       - REDIS_REPLICATION_MODE=master
+
+  dumbspy:
+    image: ghcr.io/dogclan/dumbspy:latest
+    restart: always
+
+    networks:
+      vpcbr:
+        ipv4_address: 172.28.0.4
+
+networks:
+  vpcbr:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/24
 
 volumes:
   redis:
