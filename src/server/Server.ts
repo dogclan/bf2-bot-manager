@@ -64,7 +64,7 @@ class Server {
                 bot.launch();
 
                 // Give bot a few seconds before starting next one
-                await sleep(45000);
+                await sleep(Config.BOT_LAUNCH_INTERVAL * 1000);
                 await bot.updateStatus();
             }
             catch (e: any) {
@@ -146,7 +146,7 @@ class Server {
                 await bot.relaunch();
 
                 // Give bot a few seconds before starting next one
-                await sleep(45000);
+                await sleep(Config.BOT_LAUNCH_INTERVAL * 1000);
             }
             else if (!status.enabled && status.processRunning) {
                 this.logger.info('bot is disabled but process is running, stopping', config.basename);
