@@ -1,4 +1,5 @@
 import argparse
+import ipaddress
 import os
 import pathlib
 import secrets
@@ -16,18 +17,27 @@ def generate_password(length: int = 10) -> str:
     return ''.join(secrets.choice(ALPHABET) for i in range(length))
 
 
+def is_query_port_required(config: dict) -> bool:
+    ip = ipaddress.ip_address(config['address'])
+    return not ip.is_global or config['queryDirectly']
+
+
 parser = argparse.ArgumentParser(description='Generate server configuration (including bots) '
                                              'and add it to a given config file')
 parser.add_argument('--config', help='Path to bot server configs (config.yaml)', type=str, required=True)
 parser.add_argument('--name', help='Name of the server', type=str, required=True)
 parser.add_argument('--address', help='IP address of the server', type=str, required=True)
 parser.add_argument('--port', help='Game port of the server', type=int, required=True)
+parser.add_argument('--query-port', help='Query port of the server', type=int)
 parser.add_argument('--mod', help='Mod the server is running by default (without "mods/" prefix)',
                     type=str, default='bf2')
 parser.add_argument('--slots', help='Number of slots to fill with bots', type=int, required=True)
 parser.add_argument('--reserved-slots', help='Number of slots to keep free for real players', type=int, required=True)
 parser.add_argument('--overpopulate-factor', help='Maximum factor to determine how many bots may be launched '
                                                   'beyond the desired slot count', type=int, default=2)
+parser.add_argument('--query-directly', help='Query the server directly instead of using the bflist API',
+                    dest='query_directly', action='store_true')
+parser.set_defaults(query_directly=None)
 args = parser.parse_args()
 
 configPath = pathlib.Path(args.config).absolute()
@@ -42,11 +52,17 @@ serverConfigToAdd = {
     'name': args.name,
     'address': args.address,
     'port': args.port,
+    'queryPort': args.query_port,
     'mod': f'mods/{args.mod}',
     'slots': args.slots,
     'reservedSlots': args.reserved_slots,
+    'queryDirectly': args.query_directly,
     'bots': []
 }
+
+if is_query_port_required(serverConfigToAdd) and serverConfigToAdd['queryPort'] is None:
+    print(f'Query port is required but missing, please provide it using --query-port')
+    sys.exit(1)
 
 existingBotNames = [bot['basename'] for server in configs for bot in server['bots']]
 
@@ -78,7 +94,8 @@ while len(serverConfigToAdd['bots']) < numberOfBotsToAdd:
         print(f'Failed to fetch bot names')
         sys.exit(1)
 
-configs.append(serverConfigToAdd)
+# Add config, removing any None values
+configs.append({key: value for (key, value) in serverConfigToAdd.items() if value is not None})
 
 with open(configPath, 'w') as configFile:
     yaml.dump(configs, configFile, sort_keys=False)
