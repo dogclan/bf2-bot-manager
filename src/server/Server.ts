@@ -356,11 +356,9 @@ class Server {
         this.logger.info('shutting down');
         this.status.shutdownInProgess = true;
 
-        for (const bot of this.bots) {
-            bot.stop();
-            await bot.waitForStop();
-            bot.kill();
-        }
+        await Promise.all(
+            this.bots.map((b) => b.shutdown())
+        );
     }
 }
 

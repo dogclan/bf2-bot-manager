@@ -232,6 +232,19 @@ class Bot {
         return this.start();
     }
 
+    public async shutdown(): Promise<void> {
+        this.tasks.statusUpdate.schedule.stop();
+
+        if (!this.status.botRunning) {
+            return;
+        }
+
+        this.logger.info('shutting down');
+        this.stop();
+        await this.waitForStop();
+        this.kill();
+    }
+
     private sendCommand(cmd: BotExeCommand): boolean {
         if (this.process && this.status.cliReady) {
             this.logger.debug('sending command to process via stdin: ', cmd);
