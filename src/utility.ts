@@ -1,7 +1,8 @@
 import fs from 'fs';
 import { promisify } from 'util';
-import { BflistPlayer } from './http/typing';
 import { TeamSizes } from './typing';
+import { PlayerInfo } from './query/typing';
+import * as ipaddr from 'ipaddr.js';
 
 export const mkdirAsync = promisify(fs.mkdir);
 export const linkAsync = promisify(fs.link);
@@ -28,10 +29,6 @@ export function generateCdkey(): string {
     return elements.join('-');
 }
 
-export function getStatusCheckURL(ip: string, port: number): string {
-    return `https://api.bflist.io/bf2/v1/servers/${ip}:${port}`;
-}
-
 export function getBotName(basename: string, currentName?: string): string {
     const numbers = Array.from({ length: 16 }, (x, i) => i);
 
@@ -46,10 +43,10 @@ export function getBotName(basename: string, currentName?: string): string {
     return `${basename}^${Number(newNumber).toString(16)}`;
 }
 
-export function getTeamSizes(players: BflistPlayer[]): TeamSizes {
+export function getTeamSizes(players: PlayerInfo[]): TeamSizes {
     const teamSizes = [
-        players.filter((b: BflistPlayer) => b.team == 1).length,
-        players.filter((b: BflistPlayer) => b.team == 2).length
+        players.filter((b: PlayerInfo) => b.team == 1).length,
+        players.filter((b: PlayerInfo) => b.team == 2).length
     ];
     const smaller = Math.min(...teamSizes);
     const bigger = Math.max(...teamSizes);
@@ -96,4 +93,9 @@ export function booleanToEnglish(bool?: boolean): string {
 export function isDummyDiscordToken(token: string) {
     // Return true token is empty (internal default) or "your_discord_bot_token" (docker-compose.yml default)
     return token == '' || token == 'your_discord_bot_token';
+}
+
+export function shouldQueryDirectly(address: string, queryDirectly?: boolean): boolean {
+    const ip = ipaddr.parse(address);
+    return ip.range() != 'unicast' || !!queryDirectly;
 }

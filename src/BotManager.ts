@@ -16,11 +16,10 @@ import Config from './config';
 import logger from './logger';
 import Server from './server/Server';
 import { ServerBotConfig, Task } from './typing';
-import { copyAsync, isDummyDiscordToken, mkdirAsync, readFileAsync } from './utility';
-import axios from 'axios';
-import RedisCache from './http/RedisCache';
-import { CachedHttpClient } from './http/CachedHttpClient';
+import { copyAsync, isDummyDiscordToken, mkdirAsync, readFileAsync, shouldQueryDirectly } from './utility';
+import RedisCache from './query/RedisCache';
 import Constants from './constants';
+import { BflistQueryClient, GamedigQueryClient } from './query/QueryClient';
 
 type BotManagerTasks = {
     botMaintenance: Task
@@ -214,17 +213,18 @@ class BotManager {
     }
 
     private async initializeServers(serverBotConfigs: ServerBotConfig[]): Promise<void> {
-        // Set up cached http client for bots to use when checking their onserver status
-        const aclient = axios.create({
-            timeout: Config.API_REQUEST_TIMEOUT
-        });
+        // Set up cached client for bots to use when checking their onserver status
         const cache = new RedisCache(Config.REDIS_URL, Config.REDIS_KEY_PREFIX);
         await cache.connect();
 
-        const httpClient = new CachedHttpClient(aclient, cache);
+        const httpClient = new BflistQueryClient(cache);
+        const gamedigClient = new GamedigQueryClient(cache);
 
         for (const serverBotConfig of serverBotConfigs) {
             const { bots: baseConfigs, mod: mod, ...serverConfig } = serverBotConfig;
+            const queryClient = shouldQueryDirectly(serverConfig.address, serverConfig.queryDirectly) ?
+                gamedigClient :
+                httpClient;
 
             this.logger.info('Preparing bots for', serverConfig.name);
             const bots: Bot[] = [];
@@ -247,11 +247,11 @@ class BotManager {
                     this.logger.error('Failed to set up running folder for slot', config.slot, config.nickname, e.message);
                 }
 
-                const bot = new Bot(httpClient, config);
+                const bot = new Bot(queryClient, config);
                 bots.push(bot);
             }
 
-            const server = new Server(httpClient, serverConfig, bots);
+            const server = new Server(queryClient, serverConfig, bots);
             this.servers.push(server);
         }
     }

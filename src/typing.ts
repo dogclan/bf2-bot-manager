@@ -4,6 +4,7 @@ export type BotServer = {
     name: string
     address: string
     port: number
+    queryPort?: number
     mod: string
 }
 
@@ -11,6 +12,7 @@ export type ServerBotConfig = BotServer & {
     slots: number
     reservedSlots: number
     autobalance?: boolean
+    queryDirectly?: boolean
     bots: BotBaseConfig[]
 }
 

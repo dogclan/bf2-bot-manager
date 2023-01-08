@@ -1,5 +1,6 @@
 import { createClient, RedisClientType } from '@redis/client';
-import CachedJSON from './CachedJSON';
+import moment, { Moment } from 'moment/moment';
+import { jsonParseAsync } from '../utility';
 
 class RedisCache {
     private readonly prefix: string;
@@ -39,6 +40,31 @@ class RedisCache {
 
     private prefixedKey(key: string): string {
         return this.prefix + key;
+    }
+}
+
+export class CachedJSON {
+    public data: any;
+    public asOf: Moment;
+
+    constructor(data: any, asOf?: string) {
+        this.data = data;
+        this.asOf = moment(asOf);
+    }
+
+    public stringify(replacer?: { (key: string, value: any): any }): string {
+        return JSON.stringify(
+            {
+                data: this.data,
+                asOf: this.asOf
+            },
+            replacer
+        );
+    }
+
+    public static async parse(unparsed: string): Promise<CachedJSON> {
+        const parsed = await jsonParseAsync(unparsed);
+        return new this(parsed.data, parsed.asOf);
     }
 }
 

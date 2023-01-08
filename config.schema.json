@@ -15,12 +15,18 @@
             "address": {
                 "type": "string",
                 "description": "Server IP address",
-                "examples": ["135.125.56.26"]
+                "examples": ["135.125.56.26"],
+                "pattern": "^((25[0-5]|(2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}$"
             },
             "port": {
                 "type": "number",
                 "description": "Server game port",
                 "examples": [16472]
+            },
+            "queryPort": {
+                "type": "number",
+                "description": "Server query port (required if address is a private ip or queryDirectly is true)",
+                "examples": [29900]
             },
             "mod": {
                 "type": "string",
@@ -41,6 +47,11 @@
                 "type": "boolean",
                 "description": "Ensure same number of bots for both teams",
                 "default": true
+            },
+            "queryDirectly": {
+                "type": "boolean",
+                "description": "Query the server directly instead of using the bflist API",
+                "default": false
             },
             "bots": {
                 "type": "array",
@@ -75,6 +86,39 @@
             "slots",
             "reservedSlots",
             "bots"
+        ],
+        "allOf": [
+            {
+                "if": {
+                    "not": {
+                        "properties": {
+                            "queryDirectly": {
+                                "const": false
+                            }
+                        }
+                    }
+                },
+                "then": {
+                    "required": [
+                        "queryPort"
+                    ]
+                }
+            },
+            {
+                "if": {
+                    "properties": {
+                        "address": {
+                            "pattern": "((^127\\.)|(^10\\.)|(^172\\.1[6-9]\\.)|(^172\\.2[0-9]\\.)|(^172\\.3[0-1]\\.)|(^192\\.168\\.))"
+                        }
+                    }
+                },
+                "then": {
+                    "required": [
+                        "queryPort"
+                    ]
+                }
+            }
+
         ]
     }
 }

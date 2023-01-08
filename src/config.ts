@@ -6,7 +6,7 @@ export default abstract class Config {
     static readonly RUNNING_DIR: string = path.join(Config.ROOT_DIR, 'running');
     static readonly LOG_LEVEL: string = process.env.LOG_LEVEL || 'info';
 
-    static readonly API_REQUEST_TIMEOUT = Number(process.env.API_REQUEST_TIMEOUT ?? 2000);
+    static readonly STATUS_QUERY_TIMEOUT = Number(process.env.STATUS_QUERY_TIMEOUT ?? 2000);
     static readonly REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost';
     static readonly REDIS_KEY_PREFIX = process.env.REDIS_KEY_PREFIX ?? '';
     static readonly STATUS_CACHE_TTL = Number(process.env.STATUS_CACHE_TTL ?? 18);

@@ -4,6 +4,7 @@ export type ServerConfig = {
     name: string
     address: string
     port: number
+    queryPort?: number
     slots: number
     reservedSlots: number
     currentSlots?: number

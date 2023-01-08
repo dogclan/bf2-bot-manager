@@ -4,12 +4,10 @@ import cron from 'node-cron';
 import { Logger } from 'tslog';
 import logger from '../logger';
 import { Task } from '../typing';
-import { getStatusCheckURL, sleep } from '../utility';
+import { randomNumber, sleep } from '../utility';
 import BotConfig from './BotConfig';
 import { BotStatus } from './typing';
-import { CachedHttpClient } from '../http/CachedHttpClient';
-import Config from '../config';
-import { BflistPlayer, BflistServer } from '../http/typing';
+import { PlayerInfo, QueryClient, ServerInfo } from '../query/typing';
 
 type BotExeCommand = 'start' | 'stop'
 type BotTasks = {
@@ -17,7 +15,7 @@ type BotTasks = {
 }
 
 class Bot {
-    private httpClient: CachedHttpClient;
+    private queryClient: QueryClient;
     private config: BotConfig;
 
     private logger: Logger;
@@ -27,8 +25,8 @@ class Bot {
 
     private tasks: BotTasks;
 
-    constructor(httpClient: CachedHttpClient, config: BotConfig) {
-        this.httpClient = httpClient;
+    constructor(queryClient: QueryClient, config: BotConfig) {
+        this.queryClient = queryClient;
         this.config = config;
 
         this.logger = logger.getChildLogger({ name: 'BotLogger', prefix: [this.config.basename, `(${this.config.server.name})`] });
@@ -44,6 +42,10 @@ class Bot {
             statusUpdate: {
                 // Server slot status update runs at 10,30,50, so data should be cached before bot updates start
                 schedule: cron.schedule('12,32,52 * * * * *', async () => {
+                    // Wait a random number of milliseconds to improve cache hit rate
+                    // (requests going out one after the other rather than all at once)
+                    await sleep(randomNumber(0, 5000));
+
                     this.logger.debug('updating on server status');
                     try {
                         await this.updateStatus();
@@ -164,13 +166,12 @@ class Bot {
 
     public async updateStatus(): Promise<void> {
         try {
-            const server: BflistServer = await this.httpClient.get(
-                getStatusCheckURL(this.config.server.address, this.config.server.port),
-                {
-                    ttl: Config.STATUS_CACHE_TTL
-                }
+            const serverInfo: ServerInfo = await this.queryClient.getServerInfo(
+                this.config.server.address,
+                this.config.server.port,
+                this.config.server.queryPort
             );
-            const player = server.players.find((p: BflistPlayer) => p.name == this.config.nickname);
+            const player = serverInfo.players.find((p: PlayerInfo) => p.name == this.config.nickname);
             this.status.onServer = !!player;
             this.status.team = player?.team;
             this.status.onServerLastCheckedAt = moment();

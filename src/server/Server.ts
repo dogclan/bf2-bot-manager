@@ -1,23 +1,22 @@
 import Bot from '../bot/Bot';
 import { ServerConfig, ServerSlotStatus, ServerStatus } from './typing';
-import { getStatusCheckURL, getTeamSizes, sleep } from '../utility';
+import { getTeamSizes, sleep } from '../utility';
 import { Logger } from 'tslog';
 import logger from '../logger';
 import moment from 'moment';
 import Config from '../config';
-import { CachedHttpClient } from '../http/CachedHttpClient';
-import { BflistPlayer, BflistServer } from '../http/typing';
+import { PlayerInfo, QueryClient, ServerInfo } from '../query/typing';
 
 class Server {
-    private httpClient: CachedHttpClient;
+    private queryClient: QueryClient;
     private config: ServerConfig;
     private bots: Bot[];
 
     private logger: Logger;
     private status: ServerStatus;
 
-    constructor(httpClient: CachedHttpClient, config: ServerConfig, bots: Bot[]) {
-        this.httpClient = httpClient;
+    constructor(queryClient: QueryClient, config: ServerConfig, bots: Bot[]) {
+        this.queryClient = queryClient;
         this.config = config;
         this.bots = bots;
 
@@ -257,9 +256,9 @@ class Server {
             return;
         }
 
-        const server: BflistServer = await this.fetchServerStatus();
-        const botsOnServer = this.getBotsOnServer(server);
-        const playersOnServer = this.getPlayersOnServer(server);
+        const serverInfo = await this.fetchServerStatus();
+        const botsOnServer = this.getBotsOnServer(serverInfo);
+        const playersOnServer = this.getPlayersOnServer(serverInfo);
 
         const playerTeamsSizes = getTeamSizes(playersOnServer);
         const botTeamsSizes = getTeamSizes(botsOnServer);
@@ -293,38 +292,39 @@ class Server {
     }
 
     private async getSlotStatus(): Promise<ServerSlotStatus> {
-        const server: BflistServer = await this.fetchServerStatus();
+        const serverInfo = await this.fetchServerStatus();
         // Check which bots are on server based on the data here rather than based on the bots own status tracking
         // in order to avoid mismatches in filled slot values based on slightly apart status update requests
-        const botsOnServer = this.getBotsOnServer(server);
+        const botsOnServer = this.getBotsOnServer(serverInfo);
 
         return {
-            filledTotal: server.numPlayers,
+            filledTotal: serverInfo.numPlayers,
             filledByBots: botsOnServer.length,
-            max: server.maxPlayers
+            max: serverInfo.maxPlayers
         };
     }
 
     private async getCurrentMod(): Promise<string> {
-        const server = await this.fetchServerStatus();
-        return `mods/${server.gameVariant}`;
+        const serverInfo = await this.fetchServerStatus();
+        return `mods/${serverInfo.gameVariant}`;
     }
 
-    private async fetchServerStatus(): Promise<BflistServer> {
-        return this.httpClient.get(
-            getStatusCheckURL(this.config.address, this.config.port),
-            { ttl: Config.STATUS_CACHE_TTL }
+    private async fetchServerStatus(): Promise<ServerInfo> {
+        return this.queryClient.getServerInfo(
+            this.config.address,
+            this.config.port,
+            this.config.queryPort
         );
     }
 
-    private getBotsOnServer(server: BflistServer): BflistPlayer[] {
+    private getBotsOnServer(serverInfo: ServerInfo): PlayerInfo[] {
         const botNicknames = this.bots.map((b: Bot) => b.getConfig().nickname);
-        return server.players.filter((p: BflistPlayer) => botNicknames.includes(p.name));
+        return serverInfo.players.filter((p: PlayerInfo) => botNicknames.includes(p.name));
     }
 
-    private getPlayersOnServer(server: BflistServer): BflistPlayer[] {
+    private getPlayersOnServer(serverInfo: ServerInfo): PlayerInfo[] {
         const botNicknames = this.bots.map((b: Bot) => b.getConfig().nickname);
-        return server.players.filter((p: BflistPlayer) => !botNicknames.includes(p.name));
+        return serverInfo.players.filter((p: PlayerInfo) => !botNicknames.includes(p.name));
     }
 
     public getConfig(): ServerConfig {
