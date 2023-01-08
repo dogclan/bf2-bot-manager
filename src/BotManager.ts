@@ -49,10 +49,6 @@ class BotManager {
         this.botLaunchComplete = false;
 
         // Kill child process when parent exists in order to not leave zombie processes behind
-        process.on('exit', async () => {
-            await this.shutdown();
-        });
-
         process.on('SIGINT', async () => {
             await this.shutdown();
             process.exit();
