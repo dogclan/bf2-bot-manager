@@ -35,9 +35,11 @@ parser.add_argument('--slots', help='Number of slots to fill with bots', type=in
 parser.add_argument('--reserved-slots', help='Number of slots to keep free for real players', type=int, required=True)
 parser.add_argument('--overpopulate-factor', help='Maximum factor to determine how many bots may be launched '
                                                   'beyond the desired slot count', type=int, default=2)
+parser.add_argument('--no-autobalance', help='Disable autobalancing bots between teams',
+                    dest='autobalance', action='store_false')
 parser.add_argument('--query-directly', help='Query the server directly instead of using the bflist API',
                     dest='query_directly', action='store_true')
-parser.set_defaults(query_directly=None)
+parser.set_defaults(autobalance=None, query_directly=None)
 args = parser.parse_args()
 
 configPath = pathlib.Path(args.config).absolute()
@@ -56,6 +58,7 @@ serverConfigToAdd = {
     'mod': f'mods/{args.mod}',
     'slots': args.slots,
     'reservedSlots': args.reserved_slots,
+    'autobalance': args.autobalance,
     'queryDirectly': args.query_directly,
     'bots': []
 }
