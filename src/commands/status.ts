@@ -62,10 +62,10 @@ export const status: Command = {
 function formatServerStatus(server: Server, detailed: boolean): EmbedBuilder {
     const config = server.getConfig();
     const status = server.getStatus();
-    // Bots that are neither enabled nor on the server are not of any relevance
+    // Bots that are neither enabled nor running nor on the server are not of any relevance
     const bots = server.getBots().filter((b) => {
         const status = b.getStatus();
-        return status.enabled || status.onServer;
+        return status.enabled || status.botRunning || status.onServer;
     });
 
     const fields: EmbedField[] = [
@@ -79,6 +79,11 @@ function formatServerStatus(server: Server, detailed: boolean): EmbedBuilder {
         {
             name: 'Bots enabled',
             value: bots.filter((b) => b.getStatus().enabled).length.toString(),
+            inline: true
+        },
+        {
+            name: 'Bots running',
+            value: bots.filter((b) => b.getStatus().botRunning).length.toString(),
             inline: true
         },
         {
@@ -114,8 +119,12 @@ function formatServerStatus(server: Server, detailed: boolean): EmbedBuilder {
             heading: 'Bot',
             width: longestBotName?.length || 10
         },
-        running: {
+        enabled: {
             heading: 'Enabled',
+            width: 7
+        },
+        running: {
+            heading: 'Running',
             width: 7
         },
         onServer: {
@@ -153,7 +162,8 @@ function formatServerStatus(server: Server, detailed: boolean): EmbedBuilder {
         const status = bot.getStatus();
 
         formatted += config.basename.padEnd(columns.bot.width, ' ');
-        formatted += booleanToEnglish(status.enabled).padEnd(columns.running.width);
+        formatted += booleanToEnglish(status.enabled).padEnd(columns.enabled.width);
+        formatted += booleanToEnglish(status.botRunning).padEnd(columns.running.width);
         formatted += booleanToEnglish(status.onServer).padEnd(columns.onServer.width);
         formatted += status.onServerLastCheckedAt?.fromNow() || '';
         formatted += '\n';

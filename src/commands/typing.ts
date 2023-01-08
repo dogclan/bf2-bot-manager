@@ -11,6 +11,7 @@ export type Columns = {
 
 export type ServerStatusColumns = Columns & {
     bot: Column
+    enabled: Column
     running: Column
     onServer: Column
     lastChecked: Column
