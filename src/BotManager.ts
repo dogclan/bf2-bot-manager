@@ -16,7 +16,7 @@ import Config from './config';
 import logger from './logger';
 import Server from './server/Server';
 import { ServerBotConfig, Task } from './typing';
-import { copyAsync, mkdirAsync, readFileAsync } from './utility';
+import { copyAsync, isDummyDiscordToken, mkdirAsync, readFileAsync } from './utility';
 import axios from 'axios';
 import RedisCache from './http/RedisCache';
 import { CachedHttpClient } from './http/CachedHttpClient';
@@ -144,6 +144,11 @@ class BotManager {
                 }
             }
         });
+
+        if (isDummyDiscordToken(this.token)) {
+            this.logger.warn('Configured Discord token is a dummy token, skipping Discord login');
+            return;
+        }
 
         logger.info('Logging into Discord using token');
         this.client.login(this.token);

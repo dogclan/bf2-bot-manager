@@ -92,3 +92,8 @@ export function sleep(ms: number, val?: any): Promise<any> {
 export function booleanToEnglish(bool?: boolean): string {
     return bool ? 'yes' : 'no';
 }
+
+export function isDummyDiscordToken(token: string) {
+    // Return true token is empty (internal default) or "your_discord_bot_token" (docker-compose.yml default)
+    return token == '' || token == 'your_discord_bot_token';
+}
