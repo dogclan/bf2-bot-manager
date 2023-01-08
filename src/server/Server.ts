@@ -43,6 +43,12 @@ class Server {
         const slots = this.getCurrentSlots();
         const bots = this.bots.slice(0, slots);
         for (const bot of bots) {
+            // Stop launching once shutdown started
+            if (this.status.shutdownInProgess) {
+                this.logger.info('shutdown in progress, aborting bot launch');
+                return;
+            }
+
             const config = bot.getConfig();
 
             // This will only update the mod for bots we are currently launching
@@ -71,7 +77,12 @@ class Server {
         // Fetch outside the loop to ensure the same value is used for all bots
         const currentMod = await this.getCurrentMod();
         for (const bot of this.bots) {
-            // TODO Stop running maintenance once shutdown started
+            // Stop running maintenance once shutdown started
+            if (this.status.shutdownInProgess) {
+                this.logger.info('shutdown in progress, aborting bot maintenance');
+                return;
+            }
+
             const slots = this.getCurrentSlots();
             const config = bot.getConfig();
             const status = bot.getStatus();
@@ -339,6 +350,17 @@ class Server {
 
     public getBots(): Bot[] {
         return this.bots;
+    }
+
+    public async shutdown(): Promise<void> {
+        this.logger.info('shutting down');
+        this.status.shutdownInProgess = true;
+
+        for (const bot of this.bots) {
+            bot.stop();
+            await bot.waitForStop();
+            bot.kill();
+        }
     }
 }
 

@@ -15,6 +15,7 @@ export type ServerStatus = {
     availableSlotsFreeSince?: moment.Moment
     autobalanceInProgress?: boolean
     autobalanceStartedAt?: moment.Moment
+    shutdownInProgess?: boolean
 }
 
 export type ServerSlotStatus = {

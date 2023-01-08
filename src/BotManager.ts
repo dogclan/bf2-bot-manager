@@ -281,13 +281,9 @@ class BotManager {
         this.tasks.botMaintenance.schedule.stop();
         this.tasks.slotMaintenance.schedule.stop();
 
-        for (const server of this.servers) {
-            for (const bot of server.getBots()) {
-                bot.stop();
-                await bot.waitForStop();
-                bot.kill();
-            }
-        }
+        await Promise.all(
+            this.servers.map((s) => s.shutdown())
+        );
     }
 
     public getServers(): Server[] {
