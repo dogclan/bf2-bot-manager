@@ -10,6 +10,7 @@ import Server from '../server/Server';
 import { booleanToEnglish } from '../utility';
 import { Command, ServerStatusColumns } from './typing';
 import { ServerConfig, ServerStatus } from '../server/typing';
+import Bot from '../bot/Bot';
 
 export const status: Command = {
     name: 'status',
@@ -77,6 +78,16 @@ function formatServerStatus(server: Server, detailed: boolean): EmbedBuilder {
             inline: true
         },
         {
+            name: 'Action',
+            value: formatAction(config, bots),
+            inline: true
+        },
+        {
+            name: 'Autobalance in progress',
+            value: formatAutobalanceStatus(config, status),
+            inline: true
+        },
+        {
             name: 'Bots enabled',
             value: bots.filter((b) => b.getStatus().enabled).length.toString(),
             inline: true
@@ -91,11 +102,6 @@ function formatServerStatus(server: Server, detailed: boolean): EmbedBuilder {
             value: bots.filter((b) => b.getStatus().onServer).length.toString(),
             inline: true
         },
-        {
-            name: 'Autobalance in progress',
-            value: formatAutobalanceStatus(config, status),
-            inline: true
-        }
     ];
 
     const embed = new EmbedBuilder({
@@ -180,4 +186,16 @@ function formatAutobalanceStatus(config: ServerConfig, status: ServerStatus): st
         return `Yes, started ${status.autobalanceStartedAt?.fromNow()}`;
     }
     return 'No';
+}
+
+function formatAction(config: ServerConfig, bots: Bot[]): string {
+    const slotsAvailable = config.currentSlots ?? config.slots;
+    const slotsFilled = bots.filter((b) => b.getStatus().onServer).length;
+    if (slotsAvailable > slotsFilled) {
+        return 'Fill available slots';
+    }
+    if (slotsFilled > slotsAvailable) {
+        return 'Free up slots';
+    }
+    return 'Maintain';
 }
