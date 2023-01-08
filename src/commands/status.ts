@@ -130,10 +130,6 @@ function formatServerStatus(server: Server, detailed: boolean): EmbedBuilder {
         onServer: {
             heading: 'On server',
             width: 9
-        },
-        lastChecked: {
-            heading: 'Last checked',
-            width: 17
         }
     };
 
@@ -165,7 +161,6 @@ function formatServerStatus(server: Server, detailed: boolean): EmbedBuilder {
         formatted += booleanToEnglish(status.enabled).padEnd(columns.enabled.width);
         formatted += booleanToEnglish(status.botRunning).padEnd(columns.running.width);
         formatted += booleanToEnglish(status.onServer).padEnd(columns.onServer.width);
-        formatted += status.onServerLastCheckedAt?.fromNow() || '';
         formatted += '\n';
     }
 

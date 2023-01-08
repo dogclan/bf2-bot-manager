@@ -14,7 +14,6 @@ export type ServerStatusColumns = Columns & {
     enabled: Column
     running: Column
     onServer: Column
-    lastChecked: Column
 }
 
 export type StatusOverviewColumns = Columns & {
