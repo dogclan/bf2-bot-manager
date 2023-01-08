@@ -16,14 +16,6 @@ export type ServerStatusColumns = Columns & {
     onServer: Column
 }
 
-export type StatusOverviewColumns = Columns & {
-    server: Column
-    slots: Column
-    reservedSlots: Column
-    currentSlots: Column
-    filledSlots: Column
-}
-
 export type Column = {
     heading: string
     width: number
