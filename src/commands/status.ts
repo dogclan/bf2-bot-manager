@@ -72,9 +72,7 @@ function formatServerStatus(server: Server, detailed: boolean): EmbedBuilder {
     const fields: EmbedField[] = [
         {
             name: 'Slots to fill',
-            value: config.currentSlots != undefined && config.currentSlots != config.slots ?
-                `${config.slots}, temporarily changed to ${config.currentSlots}` :
-                `${config.slots}`,
+            value: formatSlots(config),
             inline: true
         },
         {
@@ -176,6 +174,13 @@ function formatServerStatus(server: Server, detailed: boolean): EmbedBuilder {
     embed.setDescription(formatted);
 
     return embed;
+}
+
+function formatSlots(config: ServerConfig): string {
+    if (config.currentSlots != undefined && config.currentSlots != config.slots) {
+        return `${config.currentSlots}, ${config.currentSlots < config.slots ? 'down' : 'up'} from ${config.slots}`;
+    }
+    return config.slots.toString();
 }
 
 function formatAutobalanceStatus(config: ServerConfig, status: ServerStatus): string {
