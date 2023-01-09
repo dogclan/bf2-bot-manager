@@ -36,12 +36,14 @@
             "slots": {
                 "type": "number",
                 "description": "Number of slots to fill with bots",
-                "examples": [8]
+                "examples": [8],
+                "multipleOf": 2
             },
             "reservedSlots": {
                 "type": "number",
                 "description": "Number of slots to keep free on the server as it fills up (reserved for real players)",
-                "examples": [4]
+                "examples": [4],
+                "multipleOf": 2
             },
             "autobalance": {
                 "type": "boolean",
