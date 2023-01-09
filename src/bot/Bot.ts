@@ -163,23 +163,18 @@ class Bot {
     }
 
     public async updateStatus(): Promise<void> {
-        try {
-            const serverInfo: ServerInfo = await this.queryClient.getServerInfo(
-                this.config.server.address,
-                this.config.server.port,
-                this.config.server.queryPort
-            );
-            const player = serverInfo.players.find((p: PlayerInfo) => p.name == this.config.nickname);
-            this.status.onServer = !!player;
-            this.status.team = player?.team;
-            this.status.onServerLastCheckedAt = moment();
+        const serverInfo: ServerInfo = await this.queryClient.getServerInfo(
+            this.config.server.address,
+            this.config.server.port,
+            this.config.server.queryPort
+        );
+        const player = serverInfo.players.find((p: PlayerInfo) => p.name == this.config.nickname);
+        this.status.onServer = !!player;
+        this.status.team = player?.team;
+        this.status.onServerLastCheckedAt = moment();
 
-            if (this.status.onServer) {
-                this.status.lastSeenOnServerAt = moment();
-            }
-        }
-        catch (e: any) {
-            this.logger.error('failed to determine whether bot is on server', e.message);
+        if (this.status.onServer) {
+            this.status.lastSeenOnServerAt = moment();
         }
     }
 
