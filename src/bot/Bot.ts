@@ -80,7 +80,7 @@ class Bot {
         });
 
         this.process.on('exit', (code, signal) => {
-            this.logger.debug(`exited with code ${code} and signal ${signal}`);
+            this.logger.debug(`process exited with code ${code} and signal ${signal}`);
             this.status.cliReady = false;
             this.status.botRunning = false;
             this.status.botStartedAt = undefined;
@@ -88,13 +88,17 @@ class Bot {
             this.status.processStartedAt = undefined;
         });
 
+        this.process.on('error', (e) => {
+            this.logger.error('process encountered an error', e.message);
+        })
+
         this.process.stdout.on('data', (data: Buffer) => {
             const lines = String(data).trim().split('\n');
 
             // Log each line individually
             for (const line of lines) {
                 if (!line.includes('> That command doesn\'t exist')) {
-                    this.logger.debug(`stdout: ${line}`);
+                    this.logger.debug(`process stdout: ${line}`);
                 }
             }
 
@@ -117,7 +121,7 @@ class Bot {
         });
 
         this.process.stderr.on('data', (data) => {
-            this.logger.error(`stderr: ${data}`);
+            this.logger.error(`process stderr: ${data}`);
         });
     }
 

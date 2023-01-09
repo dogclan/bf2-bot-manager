@@ -57,17 +57,12 @@ class Server {
                 await bot.updateMod(currentMod);
             }
 
-            try {
-                this.logger.debug('launching bot process for', config.basename);
-                bot.setEnabled(true);
-                bot.launch();
+            this.logger.debug('launching bot process for', config.basename);
+            bot.setEnabled(true);
+            bot.launch();
 
-                // Give bot a few seconds before starting next one
-                await sleep(Config.BOT_LAUNCH_INTERVAL * 1000);
-            }
-            catch (e: any) {
-                this.logger.error('failed to launch bot process for', config.basename, e.message);
-            }
+            // Give bot a few seconds before starting next one
+            await sleep(Config.BOT_LAUNCH_INTERVAL * 1000);
         }
     }
 
