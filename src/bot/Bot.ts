@@ -81,6 +81,9 @@ class Bot {
 
         this.process.on('exit', (code, signal) => {
             this.logger.debug(`exited with code ${code} and signal ${signal}`);
+            this.status.cliReady = false;
+            this.status.botRunning = false;
+            this.status.botStartedAt = undefined;
             this.status.processRunning = false;
             this.status.processStartedAt = undefined;
         });
@@ -119,16 +122,7 @@ class Bot {
     }
 
     public kill(): boolean {
-        if (this.process && !this.process.killed && this.process.kill()) {
-            this.status.cliReady = false;
-            this.status.botRunning = false;
-            this.status.botStartedAt = undefined;
-            this.status.processRunning = false;
-            this.status.processStartedAt = undefined;
-            return true;
-        }
-
-        return false;
+        return !this.process || this.process.killed || this.process.kill(); // We want to kill the process, so it is fine if it's already killed/not set
     }
 
     public async relaunch(): Promise<void> {
