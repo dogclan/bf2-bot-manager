@@ -90,7 +90,7 @@ class Bot {
 
         this.process.on('error', (e) => {
             this.logger.error('process encountered an error', e.message);
-        })
+        });
 
         this.process.stdout.on('data', (data: Buffer) => {
             const lines = String(data).trim().split('\n');
@@ -162,7 +162,7 @@ class Bot {
         this.status.enabled = enabled;
     }
 
-    public async updateStatus(): Promise<void> {
+    private async updateStatus(): Promise<void> {
         const serverInfo: ServerInfo = await this.queryClient.getServerInfo(
             this.config.server.address,
             this.config.server.port,
