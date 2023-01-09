@@ -64,7 +64,6 @@ class Server {
 
                 // Give bot a few seconds before starting next one
                 await sleep(Config.BOT_LAUNCH_INTERVAL * 1000);
-                await bot.updateStatus();
             }
             catch (e: any) {
                 this.logger.error('failed to launch bot process for', config.basename, e.message);
@@ -104,8 +103,9 @@ class Server {
             }
 
             if (moment().diff(status.onServerLastCheckedAt, 'seconds') > Config.BOT_STATUS_UPDATE_TIMEOUT) {
-                this.logger.debug('bot has not updated it\'s status recently, skipping', config.basename);
-                continue;
+                // We cannot early return here, since bots any enabled bot would remain enabled indefinitely
+                // So, rather than make no decision at all how to proceed with the bot, make the decision based on outdated data
+                this.logger.warn('bot has not updated it\'s status recently', config.basename);
             }
 
             const botsOnServer = this.bots.filter((b: Bot) => b.getStatus().onServer && b.getStatus().enabled);
