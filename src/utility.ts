@@ -86,6 +86,10 @@ export function sleep(ms: number, val?: any): Promise<any> {
     });
 }
 
+export function sanitizeBool(value: unknown): boolean {
+    return !!Number(value);
+}
+
 export function booleanToEnglish(bool?: boolean): string {
     return bool ? 'yes' : 'no';
 }

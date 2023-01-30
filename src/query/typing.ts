@@ -39,5 +39,6 @@ export type GamedigPlayerInfo = {
     name: string
     raw: {
         team?: number;
+        AIBot?: string
     }
 }

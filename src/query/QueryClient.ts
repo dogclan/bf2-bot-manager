@@ -3,6 +3,7 @@ import { CachedGamedigClient, CachedHttpClient } from './CachedClient';
 import RedisCache from './RedisCache';
 import axios from 'axios';
 import Config from '../config';
+import { sanitizeBool } from '../utility';
 
 export class BflistQueryClient implements QueryClient {
     private httpClient: CachedHttpClient;
@@ -53,7 +54,7 @@ export class GamedigQueryClient implements QueryClient {
                 // Names are returned as "[tag] name", so remove the tag
                 const [, name] = p.name.split(' ');
                 return {
-                    name,
+                    name: sanitizeBool(p.raw.AIBot) ? p.name : name, // Bots don't follow the usual scheme => use name as returned by server
                     team: p.raw.team ?? -1
                 };
             })
