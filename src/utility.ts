@@ -10,16 +10,6 @@ export const copyAsync = promisify(fs.copyFile);
 export const readFileAsync = promisify(fs.readFile);
 export const writeFileAsync = promisify(fs.writeFile);
 
-export function jsonParseAsync(jsonString: string): Promise<any> {
-    return new Promise((resolve, reject) => {
-        try {
-            resolve(JSON.parse(jsonString));
-        } catch (e) {
-            reject(e);
-        }
-    });
-}
-
 export function generateCdkey(): string {
     const elements = [];
     for (let i = 0; i < 5; i++) {

@@ -1,6 +1,5 @@
 import { createClient, RedisClientType } from '@redis/client';
 import moment, { Moment } from 'moment/moment';
-import { jsonParseAsync } from '../utility';
 
 class RedisCache {
     private readonly prefix: string;
@@ -62,8 +61,8 @@ export class CachedJSON {
         );
     }
 
-    public static async parse(unparsed: string): Promise<CachedJSON> {
-        const parsed = await jsonParseAsync(unparsed);
+    public static parse(unparsed: string): CachedJSON {
+        const parsed = JSON.parse(unparsed);
         return new this(parsed.data, parsed.asOf);
     }
 }
