@@ -64,8 +64,9 @@
                     "properties": {
                         "basename": {
                             "type": "string",
-                            "description": "Basename of the bot (manager will append suffix at runtime to create nickname)",
-                            "examples": ["LucyFromLondon"]
+                            "description": "Basename of the bot (must not contain spaces, manager will append suffix at runtime to create nickname)",
+                            "examples": ["LucyFromLondon"],
+                            "pattern": "^\\S+$"
                         },
                         "password": {
                             "type": "string",
