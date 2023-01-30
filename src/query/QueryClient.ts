@@ -48,13 +48,13 @@ export class GamedigQueryClient implements QueryClient {
         return {
             numPlayers: result.players.length,
             maxPlayers: result.maxplayers,
-            gameVariant: result.raw.gamevariant,
+            gameVariant: result.raw.gamevariant ?? '',
             players: result.players.map((p: GamedigPlayerInfo) => {
                 // Names are returned as "[tag] name", so remove the tag
                 const [, name] = p.name.split(' ');
                 return {
                     name,
-                    team: p.raw.team
+                    team: p.raw.team ?? -1
                 };
             })
         };

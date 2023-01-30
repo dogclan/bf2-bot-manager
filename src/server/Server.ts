@@ -81,7 +81,7 @@ class Server {
             const status = bot.getStatus();
 
             // Update mod if required
-            if (config.server.mod != currentMod) {
+            if (currentMod && config.server.mod != currentMod) {
                 this.logger.info('bot is not using the current mod, updating config', config.basename, config.server.mod, currentMod);
                 await bot.updateMod(currentMod);
 
@@ -299,9 +299,12 @@ class Server {
         };
     }
 
-    private async getCurrentMod(): Promise<string> {
-        const serverInfo = await this.fetchServerStatus();
-        return `mods/${serverInfo.gameVariant}`;
+    private async getCurrentMod(): Promise<string | undefined> {
+        const { gameVariant } = await this.fetchServerStatus();
+        if (!gameVariant || gameVariant.trim().length == 0) {
+            return;
+        }
+        return `mods/${gameVariant}`;
     }
 
     private async fetchServerStatus(): Promise<ServerInfo> {

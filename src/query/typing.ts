@@ -30,7 +30,7 @@ export type PlayerInfo = {
 
 export type GamedigQueryResult = gamedig.QueryResult & {
     raw: {
-        gamevariant: string;
+        gamevariant?: string;
     }
     players: GamedigPlayerInfo[];
 }
@@ -38,6 +38,6 @@ export type GamedigQueryResult = gamedig.QueryResult & {
 export type GamedigPlayerInfo = {
     name: string
     raw: {
-        team: number;
+        team?: number;
     }
 }
