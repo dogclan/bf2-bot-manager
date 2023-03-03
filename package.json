@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "private": true,
   "engines": {
-    "node": "18.14.1"
+    "node": "18.14.2"
   },
   "scripts": {
     "build-ts": "tsc -b",
