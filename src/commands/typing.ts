@@ -1,4 +1,4 @@
-import {AutocompleteInteraction, ChatInputApplicationCommandData, ChatInputCommandInteraction} from 'discord.js';
+import { AutocompleteInteraction, ChatInputApplicationCommandData, ChatInputCommandInteraction } from 'discord.js';
 import BotManager from '../BotManager';
 
 export interface Command extends ChatInputApplicationCommandData {

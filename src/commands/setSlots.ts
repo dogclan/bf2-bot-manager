@@ -8,7 +8,7 @@ import BotManager from '../BotManager';
 import Config from '../config';
 import Server from '../server/Server';
 import { Command } from './typing';
-import {buildServerOptionChoices} from './utility';
+import { buildServerOptionChoices } from './utility';
 
 export const setSlots: Command = {
     name: 'set-slots',

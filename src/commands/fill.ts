@@ -7,7 +7,7 @@ import {
 import BotManager from '../BotManager';
 import Server from '../server/Server';
 import { Command } from './typing';
-import {buildServerOptionChoices} from './utility';
+import { buildServerOptionChoices } from './utility';
 
 export const fill: Command = {
     name: 'fill',

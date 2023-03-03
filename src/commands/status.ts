@@ -7,7 +7,7 @@ import {
 } from 'discord.js';
 import BotManager from '../BotManager';
 import Server from '../server/Server';
-import {booleanToEnglish, buildServerOptionChoices} from './utility';
+import { booleanToEnglish, buildServerOptionChoices } from './utility';
 import { Command, ServerStatusColumns } from './typing';
 import { ServerConfig, ServerStatus } from '../server/typing';
 import Bot from '../bot/Bot';
