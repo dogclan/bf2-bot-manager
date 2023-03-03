@@ -4,7 +4,7 @@ import Server from '../server/Server';
 export function buildServerOptionChoices(manager: BotManager, focusedValue: string): { name: string, value: string }[] {
     return manager.getServers()
         .map((server: Server) => server.getConfig().name)
-        .filter((choice: string) => choice.toLowerCase().startsWith(focusedValue.toLowerCase()))
+        .filter((choice: string) => choice.toLowerCase().includes(focusedValue.toLowerCase()))
         .map((choice: string) => ({ name: choice, value: choice }));
 }
 
