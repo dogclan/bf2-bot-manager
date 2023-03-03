@@ -1,13 +1,13 @@
 import {
     ApplicationCommandOptionType,
-    ApplicationCommandType,
+    ApplicationCommandType, AutocompleteInteraction,
     ChatInputCommandInteraction,
     EmbedBuilder,
     EmbedField
 } from 'discord.js';
 import BotManager from '../BotManager';
 import Server from '../server/Server';
-import { booleanToEnglish } from '../utility';
+import {booleanToEnglish, buildServerOptionChoices} from './utility';
 import { Command, ServerStatusColumns } from './typing';
 import { ServerConfig, ServerStatus } from '../server/typing';
 import Bot from '../bot/Bot';
@@ -21,7 +21,8 @@ export const status: Command = {
             name: 'server',
             description: 'Server name to show status for',
             type: ApplicationCommandOptionType.String,
-            required: false
+            required: false,
+            autocomplete: true
         },
         {
             name: 'detailed',
@@ -57,6 +58,11 @@ export const status: Command = {
         }
 
         await interaction.reply({ embeds });
+    },
+    autocomplete: async (interaction: AutocompleteInteraction, manager: BotManager) => {
+        const focusedValue = interaction.options.getFocused();
+        const choices = buildServerOptionChoices(manager, focusedValue);
+        await interaction.respond(choices);
     }
 };
 

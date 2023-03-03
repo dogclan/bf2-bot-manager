@@ -1,7 +1,13 @@
-import { ApplicationCommandOptionType, ApplicationCommandType, ChatInputCommandInteraction } from 'discord.js';
+import {
+    ApplicationCommandOptionType,
+    ApplicationCommandType,
+    AutocompleteInteraction,
+    ChatInputCommandInteraction
+} from 'discord.js';
 import BotManager from '../BotManager';
 import Server from '../server/Server';
 import { Command } from './typing';
+import {buildServerOptionChoices} from './utility';
 
 export const fill: Command = {
     name: 'fill',
@@ -12,7 +18,8 @@ export const fill: Command = {
             name: 'server',
             description: 'Name of server to enable bots for',
             type: ApplicationCommandOptionType.String,
-            required: false
+            required: false,
+            autocomplete: true
         }
     ],
     execute: async (interaction: ChatInputCommandInteraction, manager: BotManager) => {
@@ -41,5 +48,10 @@ export const fill: Command = {
         }
 
         await interaction.reply(reply);
+    },
+    autocomplete: async (interaction: AutocompleteInteraction, manager: BotManager) => {
+        const focusedValue = interaction.options.getFocused();
+        const choices = buildServerOptionChoices(manager, focusedValue);
+        await interaction.respond(choices);
     }
 };

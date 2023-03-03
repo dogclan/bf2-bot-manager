@@ -1,8 +1,9 @@
-import { ChatInputApplicationCommandData, ChatInputCommandInteraction } from 'discord.js';
+import {AutocompleteInteraction, ChatInputApplicationCommandData, ChatInputCommandInteraction} from 'discord.js';
 import BotManager from '../BotManager';
 
 export interface Command extends ChatInputApplicationCommandData {
     execute: (interaction: ChatInputCommandInteraction, manager: BotManager) => Promise<void>;
+    autocomplete?: (interaction: AutocompleteInteraction, manager: BotManager) => Promise<void>;
 }
 
 export type Columns = {

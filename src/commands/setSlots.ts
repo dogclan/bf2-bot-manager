@@ -1,8 +1,14 @@
-import { ApplicationCommandOptionType, ApplicationCommandType, ChatInputCommandInteraction } from 'discord.js';
+import {
+    ApplicationCommandOptionType,
+    ApplicationCommandType,
+    AutocompleteInteraction,
+    ChatInputCommandInteraction
+} from 'discord.js';
 import BotManager from '../BotManager';
 import Config from '../config';
 import Server from '../server/Server';
 import { Command } from './typing';
+import {buildServerOptionChoices} from './utility';
 
 export const setSlots: Command = {
     name: 'set-slots',
@@ -13,7 +19,8 @@ export const setSlots: Command = {
             name: 'server',
             description: 'Name of server to change number of slots for',
             type: ApplicationCommandOptionType.String,
-            required: true
+            required: true,
+            autocomplete: true
         },
         {
             name: 'slots',
@@ -57,5 +64,10 @@ export const setSlots: Command = {
         }
 
         await interaction.reply(reply);
+    },
+    autocomplete: async (interaction: AutocompleteInteraction, manager: BotManager) => {
+        const focusedValue = interaction.options.getFocused();
+        const choices = buildServerOptionChoices(manager, focusedValue);
+        await interaction.respond(choices);
     }
 };
