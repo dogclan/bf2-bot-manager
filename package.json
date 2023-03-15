@@ -34,7 +34,7 @@
   "devDependencies": {
     "@tsconfig/node14": "1.0.3",
     "@tsconfig/recommended": "1.0.2",
-    "@types/gamedig": "4.0.0",
+    "@types/gamedig": "4.0.1",
     "@types/js-yaml": "4.0.5",
     "@types/node-cron": "3.0.7",
     "@typescript-eslint/eslint-plugin": "5.54.0",
