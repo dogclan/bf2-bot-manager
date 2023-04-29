@@ -53,6 +53,6 @@
     "node-cron": "3.0.2",
     "redis": "4.6.5",
     "tslog": "3.3.4",
-    "xmlbuilder2": "3.0.2"
+    "xmlbuilder2": "3.1.0"
   }
 }
