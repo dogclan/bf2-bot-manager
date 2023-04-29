@@ -28,11 +28,6 @@ import RedisCache from './query/RedisCache';
 import Constants from './constants';
 import { BflistQueryClient, GamedigQueryClient } from './query/QueryClient';
 
-type BotManagerTasks = {
-    botMaintenance: Task
-    slotMaintenance: Task
-}
-
 class BotManager {
     private token: string;
 
@@ -44,7 +39,6 @@ class BotManager {
     private botLaunchComplete: boolean;
 
     private commands: Command[];
-    private tasks: BotManagerTasks;
 
     constructor(token: string) {
         this.token = token;
@@ -65,63 +59,6 @@ class BotManager {
             await this.shutdown();
             process.exit();
         });
-
-        this.tasks = {
-            botMaintenance: {
-                running: false,
-                schedule: cron.schedule('*/2 * * * *', async () => {
-                    if (this.tasks.botMaintenance.running) {
-                        this.logger.warn('Bot maintenance is already running, skipping');
-                        return;
-                    }
-
-                    this.logger.debug('Running bot maintenance');
-                    this.tasks.botMaintenance.running = true;
-                    try {
-                        await Promise.allSettled(this.servers.map((s: Server) => s.maintainBots()));
-                        this.logger.debug('Bot maintenance complete');
-                    }
-                    catch (e: any) {
-                        this.logger.error('Encountered an error during bot maintenance', e.message);
-                    }
-                    finally {
-                        this.tasks.botMaintenance.running = false;
-                    }
-                }, {
-                    scheduled: false
-                })
-            },
-            slotMaintenance: {
-                running: false,
-                schedule: cron.schedule('10,30,50 * * * * *', async () => {
-                    if (this.tasks.slotMaintenance.running) {
-                        this.logger.warn('Slot maintenance is already running, skipping');
-                    }
-                    this.tasks.slotMaintenance.running = true;
-
-                    this.logger.debug('Running bot team balance check');
-                    try {
-                        await Promise.allSettled(this.servers.map((s: Server) => s.ensureTeamBalance()));
-                    }
-                    catch (e: any) {
-                        this.logger.error('Encountered an error during bot team balance check', e.message);
-                    }
-
-                    this.logger.debug('Running free slot check');
-                    try {
-                        await Promise.allSettled(this.servers.map((s: Server) => s.ensureReservedSlots()));
-                    }
-                    catch (e: any) {
-                        this.logger.debug('Encountered an error during free slot check', e.message);
-                    }
-                    finally {
-                        this.tasks.slotMaintenance.running = false;
-                    }
-                }, {
-                    scheduled: false
-                })
-            }
-        };
 
         this.client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
@@ -195,10 +132,6 @@ class BotManager {
         await Promise.allSettled(this.servers.map((s: Server) => s.ensureReservedSlots(true)));
 
         await Promise.allSettled(this.servers.map((s: Server) => s.launchBots()));
-
-        // Start tasks
-        this.tasks.botMaintenance.schedule.start();
-        this.tasks.slotMaintenance.schedule.start();
 
         this.botLaunchComplete = true;
     }
@@ -293,9 +226,6 @@ class BotManager {
     }
 
     public async shutdown(): Promise<void> {
-        this.tasks.botMaintenance.schedule.stop();
-        this.tasks.slotMaintenance.schedule.stop();
-
         await Promise.all(
             this.servers.map((s) => s.shutdown())
         );

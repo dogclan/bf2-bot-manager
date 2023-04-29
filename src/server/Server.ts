@@ -6,6 +6,13 @@ import logger from '../logger';
 import moment from 'moment';
 import Config from '../config';
 import { PlayerInfo, QueryClient, ServerInfo } from '../query/typing';
+import { Task } from '../typing';
+import cron from 'node-cron';
+
+type MaintenanceTasks = {
+    botMaintenance: Task
+    slotMaintenance: Task
+}
 
 class Server {
     private queryClient: QueryClient;
@@ -15,6 +22,8 @@ class Server {
     private logger: Logger;
     private status: ServerStatus;
 
+    private tasks: MaintenanceTasks;
+
     constructor(queryClient: QueryClient, config: ServerConfig, bots: Bot[]) {
         this.queryClient = queryClient;
         this.config = config;
@@ -22,6 +31,63 @@ class Server {
 
         this.logger = logger.getChildLogger({ name: 'ServerLogger', prefix: [this.config.name] });
         this.status = {};
+
+        this.tasks = {
+            botMaintenance: {
+                running: false,
+                schedule: cron.schedule('*/2 * * * *', async () => {
+                    if (this.tasks.botMaintenance.running) {
+                        this.logger.warn('Bot maintenance is already running, skipping');
+                        return;
+                    }
+
+                    this.logger.debug('Running bot maintenance');
+                    this.tasks.botMaintenance.running = true;
+                    try {
+                        await this.maintainBots();
+                        this.logger.debug('Bot maintenance complete');
+                    }
+                    catch (e: any) {
+                        this.logger.error('Encountered an error during bot maintenance', e.message);
+                    }
+                    finally {
+                        this.tasks.botMaintenance.running = false;
+                    }
+                }, {
+                    scheduled: false
+                })
+            },
+            slotMaintenance: {
+                running: false,
+                schedule: cron.schedule('10,30,50 * * * * *', async () => {
+                    if (this.tasks.slotMaintenance.running) {
+                        this.logger.warn('Slot maintenance is already running, skipping');
+                    }
+                    this.tasks.slotMaintenance.running = true;
+
+                    this.logger.debug('Running bot team balance check');
+                    try {
+                        await this.ensureTeamBalance();
+                    }
+                    catch (e: any) {
+                        this.logger.error('Encountered an error during bot team balance check', e.message);
+                    }
+
+                    this.logger.debug('Running free slot check');
+                    try {
+                        await this.ensureReservedSlots();
+                    }
+                    catch (e: any) {
+                        this.logger.debug('Encountered an error during free slot check', e.message);
+                    }
+                    finally {
+                        this.tasks.slotMaintenance.running = false;
+                    }
+                }, {
+                    scheduled: false
+                })
+            }
+        };
     }
 
     public async launchBots(): Promise<void> {
@@ -64,6 +130,10 @@ class Server {
             // Give bot a few seconds before starting next one
             await sleep(Config.BOT_LAUNCH_INTERVAL * 1000);
         }
+
+        this.logger.info('launch complete, starting maintenance tasks');
+        this.tasks.botMaintenance.schedule.start();
+        this.tasks.slotMaintenance.schedule.start();
     }
 
     public async maintainBots(): Promise<void> {
@@ -353,6 +423,9 @@ class Server {
     public async shutdown(): Promise<void> {
         this.logger.info('shutting down');
         this.status.shutdownInProgess = true;
+
+        this.tasks.botMaintenance.schedule.stop();
+        this.tasks.slotMaintenance.schedule.stop();
 
         await Promise.all(
             this.bots.map((b) => b.shutdown())
