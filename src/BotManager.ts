@@ -232,7 +232,7 @@ class BotManager {
         const gamedigClient = new GamedigQueryClient(cache);
 
         for (const serverBotConfig of serverBotConfigs) {
-            const { bots: baseConfigs, mod: mod, ...serverConfig } = serverBotConfig;
+            const { bots: baseConfigs, ...serverConfig } = serverBotConfig;
             const queryClient = shouldQueryDirectly(serverConfig.address, serverConfig.queryDirectly) ?
                 gamedigClient :
                 httpClient;
@@ -246,7 +246,6 @@ class BotManager {
                     slot,
                     {
                         ...serverConfig,
-                        mod: mod,
                     }
                 );
 

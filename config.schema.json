@@ -55,6 +55,11 @@
                 "description": "Query the server directly instead of using the bflist API",
                 "default": false
             },
+            "rotateBotNames": {
+                "type": "boolean",
+                "description": "Add rotating suffix to bot basenames (bot with basename 'SomeBot' will join server as e.g. 'SomeBot^6')",
+                "default": true
+            },
             "bots": {
                 "type": "array",
                 "minItems": 1,

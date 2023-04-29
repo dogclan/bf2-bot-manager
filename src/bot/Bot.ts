@@ -143,7 +143,7 @@ class Bot {
         return this.config;
     }
 
-    public async rotateNicknameAndCdKey(): Promise<void> {
+    public async rotateIdentifiers(): Promise<void> {
         await this.config.rotateNickname(false);
         await this.config.rotateCdKey();
 

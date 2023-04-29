@@ -29,7 +29,7 @@ class BotConfig {
         this.server = server;
         this.password = password;
         
-        this.nickname = getBotName(basename);
+        this.nickname = server.rotateBotNames === false ? basename : getBotName(basename);
         this.cwd = path.join(Config.RUNNING_DIR, this.server.name, String(this.slot));
         this.cdKey = generateCdkey();
     }
@@ -74,6 +74,10 @@ class BotConfig {
     }
 
     async rotateNickname(writeXml = true): Promise<void> {
+        if (this.server.rotateBotNames === false) {
+            return;
+        }
+
         this.nickname = getBotName(this.basename, this.nickname);
         if (writeXml) {
             return this.writeXml();

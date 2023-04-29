@@ -6,6 +6,7 @@ export type BotServer = {
     port: number
     queryPort?: number
     mod: string
+    rotateBotNames?: boolean
 }
 
 export type ServerBotConfig = BotServer & {
