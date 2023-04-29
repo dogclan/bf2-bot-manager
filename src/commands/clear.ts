@@ -23,13 +23,13 @@ export const clear: Command = {
         }
     ],
     execute: async (interaction: ChatInputCommandInteraction, manager: BotManager) => {
-        if (!manager.isBotLaunchComplete()) {
+        const serverName = interaction.options.getString('server');
+        const servers = manager.getServers().filter((server: Server) => !serverName || server.getConfig().name == serverName);
+
+        if (servers.some((server: Server) => !server.getStatus().botLaunchComplete)) {
             await interaction.reply('Not all bots have been launched yet. Please wait until bot launch is complete before changing server settings.');
             return;
         }
-
-        const serverName = interaction.options.getString('server');
-        const servers = manager.getServers().filter((server: Server) => !serverName || server.getConfig().name == serverName);
 
         for (const server of servers) {
             server.setCurrentSlots(0);

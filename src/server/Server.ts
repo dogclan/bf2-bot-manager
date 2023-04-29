@@ -132,6 +132,7 @@ class Server {
         }
 
         this.logger.info('launch complete, starting maintenance tasks');
+        this.status.botLaunchComplete = true;
         this.tasks.botMaintenance.schedule.start();
         this.tasks.slotMaintenance.schedule.start();
     }

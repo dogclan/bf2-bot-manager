@@ -36,7 +36,6 @@ class BotManager {
     private configSchema: Schema;
 
     private servers: Server[];
-    private botLaunchComplete: boolean;
 
     private commands: Command[];
 
@@ -47,7 +46,6 @@ class BotManager {
         this.configSchema = this.loadConfigSchema();
 
         this.servers = [];
-        this.botLaunchComplete = false;
 
         // Kill child process when parent exists in order to not leave zombie processes behind
         process.on('SIGINT', async () => {
@@ -132,8 +130,6 @@ class BotManager {
         await Promise.allSettled(this.servers.map((s: Server) => s.ensureReservedSlots(true)));
 
         await Promise.allSettled(this.servers.map((s: Server) => s.launchBots()));
-
-        this.botLaunchComplete = true;
     }
 
     private async initializeResources(): Promise<void> {
@@ -237,10 +233,6 @@ class BotManager {
 
     public getBots(): Bot[] {
         return this.servers.flatMap((server: Server) => server.getBots());
-    }
-
-    public isBotLaunchComplete(): boolean {
-        return this.botLaunchComplete;
     }
 
     private async handleChatInputCommand(interaction: ChatInputCommandInteraction): Promise<void> {

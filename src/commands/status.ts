@@ -48,15 +48,6 @@ export const status: Command = {
 
         const embeds = servers.map((s) => formatServerStatus(s, detailed));
 
-        if (!manager.isBotLaunchComplete()) {
-            for (const embed of embeds) {
-                embed.setFooter({
-                    iconURL: 'https://static.cetteup.com/info-yellow.png',
-                    text: 'Not all bots have been launched yet, meaning bot/filled slot status may not be up to date.'
-                });
-            }
-        }
-
         await interaction.reply({ embeds });
     },
     autocomplete: async (interaction: AutocompleteInteraction, manager: BotManager) => {
@@ -118,6 +109,13 @@ function formatServerStatus(server: Server, detailed: boolean): EmbedBuilder {
         }
     });
     embed.setColor('#cf8562');
+
+    if (!status.botLaunchComplete) {
+        embed.setFooter({
+            iconURL: 'https://static.cetteup.com/info-yellow.png',
+            text: 'Not all bots have been launched yet, meaning bot/filled slot status may not be up to date.'
+        });
+    }
 
     if (!detailed) {
         return embed;

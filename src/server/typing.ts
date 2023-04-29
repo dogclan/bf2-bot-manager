@@ -12,6 +12,7 @@ export type ServerConfig = {
 }
 
 export type ServerStatus = {
+    botLaunchComplete?: boolean
     currentSlotsTakenSince?: moment.Moment
     availableSlotsFreeSince?: moment.Moment
     autobalanceInProgress?: boolean

@@ -41,7 +41,7 @@ export const setSlots: Command = {
             await interaction.reply(`I do not manage bots for a server called "${options.serverName}".`);
             return;
         }
-        else if (!manager.isBotLaunchComplete()) {
+        else if (!server.getStatus().botLaunchComplete) {
             await interaction.reply('Not all bots have been launched yet. Please wait until bot launch is complete before changing server settings.');
             return;
         }
