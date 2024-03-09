@@ -35,6 +35,7 @@ These options need to/can be defined for each server.
 | bots           | List of bot configurations ²                                                                            |         | Yes                                                                 |
 
 ¹ Must be an even number.
+
 ² By default, the number of bot configurations needs to be at least 2x the number of slots to fill on the server. See the note on [overpopulating](docs/overpopulating.md) for details.
 
 ### Bot-specific options
