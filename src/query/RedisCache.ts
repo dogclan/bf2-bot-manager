@@ -15,7 +15,7 @@ class RedisCache {
     }
 
     public async connect(): Promise<void> {
-        return this.rclient.connect();
+        await this.rclient.connect();
     }
 
     public async setEx(key: string, seconds: number, value: string): Promise<string> {
