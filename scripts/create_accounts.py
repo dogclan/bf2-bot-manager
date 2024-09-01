@@ -10,6 +10,8 @@ from typing import List
 import mysql.connector
 import yaml
 
+from scripts.types import ServerConfig
+
 
 class DatabaseBackend(str, Enum):
     MySQL = 'mysql'
@@ -44,9 +46,9 @@ if not os.path.isfile(configPath):
     sys.exit(1)
 
 with open(configPath, 'r') as configFile:
-    config = yaml.load(configFile, yaml.Loader)
+    configs = [ServerConfig.load(parsed) for parsed in yaml.load(configFile, yaml.Loader)]
 
-bots = [bot for server in config for bot in server['bots']]
+bots = [bot for server in configs for bot in server.bots]
 
 try:
     backend = DatabaseBackend(args.backend)
@@ -80,15 +82,13 @@ lastPid = results.pop()['id'] if len(results) > 0 else 50000000
 
 errors = 0
 for bot in bots:
-    basename, password = bot.values()
-
     # Name must be leave space for 2 character name suffix ("^{number}")
-    if len(basename) > 16:
-        print(f'Name "{basename}" is too long (15 characters max.), skipping name')
+    if len(bot.basename) > 16:
+        print(f'Name "{bot.basename}" is too long (15 characters max.), skipping name')
 
     for i in range(0, 16):
         lastPid += 1
-        name = f'{basename}^{i:x}'
+        name = f'{bot.basename}^{i:x}'
         sql = prepare_statement(
             'accounts',
             ['id', 'name', 'password', 'email', 'country'],
@@ -98,7 +98,7 @@ for bot in bots:
             cursor.execute(sql, {
                 'id': lastPid,
                 'name': name,
-                'password': password,
+                'password': bot.password,
                 'email': 'bla@bla.com',
                 'country': 'DE'
             })
