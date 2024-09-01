@@ -5,6 +5,7 @@ import pathlib
 import secrets
 import string
 import sys
+from typing import Any
 
 import requests
 import yaml
@@ -19,7 +20,15 @@ def generate_password(length: int = 10) -> str:
 
 def is_query_port_required(config: dict) -> bool:
     ip = ipaddress.ip_address(config['address'])
-    return not ip.is_global or config['queryDirectly']
+    return not ip.is_global or config.get('queryDirectly', False)
+
+
+def dict_filter(d: dict, remove: Any) -> dict:
+    return {
+        key: value
+        for (key, value) in d.items()
+        if value != remove
+    }
 
 
 parser = argparse.ArgumentParser(description='Generate server configuration (including bots) '
@@ -50,28 +59,39 @@ else:
     with open(configPath, 'r') as configFile:
         configs = yaml.load(configFile, yaml.FullLoader)
 
-serverConfigToAdd = {
+
+config = next(
+    (config for config in configs if config['address'] == args.address and config['port'] == args.port),
+    None
+)
+
+if config is None:
+    config = {
+        'address': args.address,
+        'port': args.port,
+        'bots': []
+    }
+    configs.append(config)
+
+config.update(dict_filter({
     'name': args.name,
-    'address': args.address,
-    'port': args.port,
     'queryPort': args.query_port,
     'mod': f'mods/{args.mod}',
     'slots': args.slots,
     'reservedSlots': args.reserved_slots,
     'autobalance': args.autobalance,
     'queryDirectly': args.query_directly,
-    'bots': []
-}
+}, None))
 
-if is_query_port_required(serverConfigToAdd) and serverConfigToAdd['queryPort'] is None:
+if is_query_port_required(config) and config['queryPort'] is None:
     print(f'Query port is required but missing, please provide it using --query-port')
     sys.exit(1)
 
 existingBotNames = [bot['basename'] for server in configs for bot in server['bots']]
 
-numberOfBotsToAdd = serverConfigToAdd['slots'] * args.overpopulate_factor
-while len(serverConfigToAdd['bots']) < numberOfBotsToAdd:
-    print(f'Fetching bot names (need {numberOfBotsToAdd - len(serverConfigToAdd["bots"])} more)')
+numberOfBots = config['slots'] * args.overpopulate_factor
+while len(config['bots']) < numberOfBots:
+    print(f'Fetching bot names (need {numberOfBots - len(config["bots"])} more)')
     try:
         # Can't simply calculate count to fetch here, since certain count values lead to API errors
         resp = requests.get(
@@ -82,9 +102,9 @@ while len(serverConfigToAdd['bots']) < numberOfBotsToAdd:
         if resp.ok:
             parsed = resp.json()
             for tag in parsed['data']:
-                if len(serverConfigToAdd['bots']) < numberOfBotsToAdd and \
+                if len(config['bots']) < numberOfBots and \
                         len(tag['name']) <= 16 and tag['name'] not in existingBotNames:
-                    serverConfigToAdd['bots'].append({
+                    config['bots'].append({
                         'basename': tag['name'],
                         'password': generate_password()
                     })
@@ -96,9 +116,6 @@ while len(serverConfigToAdd['bots']) < numberOfBotsToAdd:
         print(e)
         print(f'Failed to fetch bot names')
         sys.exit(1)
-
-# Add config, removing any None values
-configs.append({key: value for (key, value) in serverConfigToAdd.items() if value is not None})
 
 with open(configPath, 'w') as configFile:
     yaml.dump(configs, configFile, sort_keys=False)
