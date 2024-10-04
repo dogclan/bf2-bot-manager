@@ -1,4 +1,4 @@
-FROM node:18.16.0
+FROM node:20.18.0
 RUN apt update
 RUN apt install --no-install-recommends --assume-yes wine
 RUN dpkg --add-architecture i386
