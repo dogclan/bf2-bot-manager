@@ -47,7 +47,7 @@
     "discord.js": "14.15.3",
     "gamedig": "4.0.6",
     "ipaddr.js": "2.2.0",
-    "js-yaml": "4.1.0",
+    "js-yaml": "4.1.1",
     "jsonschema": "1.4.1",
     "moment": "2.29.4",
     "node-cron": "3.0.3",
