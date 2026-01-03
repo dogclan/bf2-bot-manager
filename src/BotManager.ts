@@ -62,7 +62,7 @@ class BotManager {
 
         this.commands = [status, fill, clear, setSlots];
 
-        this.client.once('ready', async () => {
+        this.client.once('clientReady', async () => {
             this.client.user?.presence.set({ status: 'online' });
 
             this.logger.info('Client is ready, registering commands');
