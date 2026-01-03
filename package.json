@@ -32,6 +32,8 @@
   },
   "homepage": "https://github.com/dogclan/bf2-bot-manager#readme",
   "devDependencies": {
+    "@eslint/eslintrc": "3.3.3",
+    "@eslint/js": "9.39.2",
     "@tsconfig/node24": "24.0.3",
     "@tsconfig/recommended": "1.0.13",
     "@types/gamedig": "5.0.3",
@@ -40,6 +42,7 @@
     "@typescript-eslint/eslint-plugin": "8.51.0",
     "@typescript-eslint/parser": "8.51.0",
     "eslint": "9.39.2",
+    "globals": "17.0.0",
     "typescript": "5.9.3"
   },
   "dependencies": {
