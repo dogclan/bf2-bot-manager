@@ -8,9 +8,9 @@
     "node": "18.20.8"
   },
   "scripts": {
-    "build-ts": "tsc -b",
+    "build": "tsc -b",
     "start": "node dist/index.js",
-    "watch-ts": "tsc -w",
+    "watch": "tsc -w",
     "lint": "npx eslint \"src/**\" --fix"
   },
   "repository": {

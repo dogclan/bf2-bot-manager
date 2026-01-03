@@ -16,7 +16,7 @@ RUN npm install --update-notifier=false
 
 ADD . /usr/src/app
 
-RUN npm run build-ts
+RUN npm run build
 
 RUN npm prune --omit=dev
 
