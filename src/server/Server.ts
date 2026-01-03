@@ -35,7 +35,7 @@ class Server {
         this.tasks = {
             botMaintenance: {
                 running: false,
-                schedule: cron.schedule('*/2 * * * *', async () => {
+                schedule: cron.createTask('*/2 * * * *', async () => {
                     if (this.tasks.botMaintenance.running) {
                         this.logger.warn('Bot maintenance is already running, skipping');
                         return;
@@ -53,13 +53,11 @@ class Server {
                     finally {
                         this.tasks.botMaintenance.running = false;
                     }
-                }, {
-                    scheduled: false
                 })
             },
             slotMaintenance: {
                 running: false,
-                schedule: cron.schedule('10,30,50 * * * * *', async () => {
+                schedule: cron.createTask('10,30,50 * * * * *', async () => {
                     if (this.tasks.slotMaintenance.running) {
                         this.logger.warn('Slot maintenance is already running, skipping');
                     }
@@ -83,8 +81,6 @@ class Server {
                     finally {
                         this.tasks.slotMaintenance.running = false;
                     }
-                }, {
-                    scheduled: false
                 })
             }
         };
