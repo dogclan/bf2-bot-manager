@@ -50,7 +50,7 @@
     "js-yaml": "4.1.1",
     "jsonschema": "1.5.0",
     "moment": "2.29.4",
-    "node-cron": "3.0.3",
+    "node-cron": "4.2.1",
     "redis": "4.7.1",
     "tslog": "3.3.4",
     "xmlbuilder2": "3.1.1"
