@@ -1,4 +1,4 @@
-import cron from 'node-cron';
+import { ScheduledTask } from 'node-cron';
 
 export type BotServer = {
     name: string
@@ -24,7 +24,7 @@ export type BotBaseConfig = {
 
 export type Task = {
     running?: boolean
-    schedule: cron.ScheduledTask
+    schedule: ScheduledTask
 }
 
 export type TeamSizes = {

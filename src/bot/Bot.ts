@@ -41,7 +41,7 @@ class Bot {
         this.tasks = {
             statusUpdate: {
                 // Server slot status update runs at 10,30,50, so data should be cached before bot updates start
-                schedule: cron.schedule('12,32,52 * * * * *', async () => {
+                schedule: cron.createTask('12,32,52 * * * * *', async () => {
                     // Wait a random number of milliseconds to improve cache hit rate
                     // (requests going out one after the other rather than all at once)
                     await sleep(randomNumber(0, 5000));
@@ -54,8 +54,6 @@ class Bot {
                     catch (e: any) {
                         this.logger.error('encountered an error during bot on server status update', e.message);
                     }
-                }, {
-                    scheduled: false
                 })
             }
         };
