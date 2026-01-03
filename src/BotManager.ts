@@ -9,7 +9,6 @@ import {
 import fs from 'fs';
 import yaml from 'js-yaml';
 import { Schema, ValidationError, Validator } from 'jsonschema';
-import cron from 'node-cron';
 import path from 'path';
 import { Logger } from 'tslog';
 import Bot from './bot/Bot';
@@ -22,7 +21,7 @@ import { Command } from './commands/typing';
 import Config from './config';
 import logger from './logger';
 import Server from './server/Server';
-import { ServerBotConfig, Task } from './typing';
+import { ServerBotConfig } from './typing';
 import { copyAsync, isDummyDiscordToken, mkdirAsync, readFileAsync, shouldQueryDirectly } from './utility';
 import RedisCache from './query/RedisCache';
 import Constants from './constants';
@@ -120,7 +119,7 @@ class BotManager {
             await this.initializeResources();
         }
         catch (e: any) {
-            this.logger.fatal('Failed to initialize resources');
+            this.logger.fatal('Failed to initialize resources', e.message);
             process.exit(1);
         }
 
