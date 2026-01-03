@@ -43,6 +43,7 @@
     "typescript": "5.9.3"
   },
   "dependencies": {
+    "@redis/client": "1.6.1",
     "axios": "1.13.2",
     "discord.js": "14.25.1",
     "gamedig": "5.3.2",
@@ -51,7 +52,6 @@
     "jsonschema": "1.5.0",
     "moment": "2.30.1",
     "node-cron": "4.2.1",
-    "redis": "4.7.1",
     "tslog": "3.3.4",
     "xmlbuilder2": "3.1.1"
   }
