@@ -1,7 +1,7 @@
-import path from 'path';
+import * as path from 'path';
 
 export default abstract class Config {
-    static readonly ROOT_DIR: string = path.join(__dirname, '..');
+    static readonly ROOT_DIR: string = process.env.ROOT_DIR ?? path.join(__dirname, '..');
     static readonly RESOURCE_DIR: string = path.join(Config.ROOT_DIR, 'resources');
     static readonly RUNNING_DIR: string = path.join(Config.ROOT_DIR, 'running');
     static readonly LOG_LEVEL: string = process.env.LOG_LEVEL || 'info';

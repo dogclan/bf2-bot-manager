@@ -1,26 +1,38 @@
-FROM node:18.16.0
+FROM node:18.20.8-bullseye AS base
+
+FROM base AS build
+
+WORKDIR /app
+
+COPY . .
+
+RUN npm ci
+
+RUN npm run build
+
+FROM base AS app
+
+WORKDIR /app
+
+ENV DISPLAY :0
+
 RUN apt update
 RUN apt install --no-install-recommends --assume-yes wine
 RUN dpkg --add-architecture i386
 RUN apt update
 RUN apt install --no-install-recommends --assume-yes wine32
-ENV DISPLAY :0
 
-WORKDIR /usr/src/app
+COPY package*.json .
 
-COPY package*.json ./
+RUN npm ci --omit dev
 
-RUN npm install -g npm@latest --update-notifier=false
+COPY --from=build /app/dist/ .
 
-RUN npm install --update-notifier=false
+COPY config.schema.json .
 
-ADD . /usr/src/app
-
-RUN npm run build
-
-RUN npm prune --omit=dev
-
-COPY wait-for-it.sh wait-for-it.sh
+COPY wait-for-it.sh .
 RUN chmod +x wait-for-it.sh
 
-CMD ["node", "dist/index.js"]
+ENV ROOT_DIR=/app
+
+CMD ["node", "index.js"]
