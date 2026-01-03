@@ -32,7 +32,7 @@
   },
   "homepage": "https://github.com/dogclan/bf2-bot-manager#readme",
   "devDependencies": {
-    "@tsconfig/node20": "20.1.0",
+    "@tsconfig/node20": "20.1.8",
     "@tsconfig/recommended": "1.0.13",
     "@types/gamedig": "5.0.3",
     "@types/js-yaml": "4.0.9",
