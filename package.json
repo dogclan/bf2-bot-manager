@@ -37,8 +37,8 @@
     "@types/gamedig": "5.0.3",
     "@types/js-yaml": "4.0.9",
     "@types/node-cron": "3.0.11",
-    "@typescript-eslint/eslint-plugin": "5.62.0",
-    "@typescript-eslint/parser": "5.62.0",
+    "@typescript-eslint/eslint-plugin": "8.51.0",
+    "@typescript-eslint/parser": "8.51.0",
     "eslint": "8.57.1",
     "typescript": "5.9.3"
   },
