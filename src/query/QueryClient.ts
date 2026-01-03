@@ -32,13 +32,13 @@ export class GamedigQueryClient implements QueryClient {
 
     async getServerInfo(ip: string, port: number, queryPort: number): Promise<ServerInfo> {
         const result = await this.gamedigClient.query(
-            'bf2',
+            'battlefield2',
             ip,
             queryPort,
             {
                 ttl: Config.STATUS_CACHE_TTL,
                 givenPortOnly: true,
-                maxAttempts: 2,
+                maxRetries: 2,
                 socketTimeout: Config.STATUS_QUERY_TIMEOUT
             }
         );

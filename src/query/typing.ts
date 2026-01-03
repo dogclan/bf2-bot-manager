@@ -1,4 +1,4 @@
-import gamedig from 'gamedig';
+import { QueryOptions, QueryResult } from 'gamedig';
 
 export type CachedRequestConfig = {
     ttl: number;
@@ -6,7 +6,7 @@ export type CachedRequestConfig = {
     headers?: any;
 }
 
-export type CachedQueryConfig = Pick<gamedig.QueryOptions, 'givenPortOnly' | 'attemptTimeout' | 'socketTimeout' | 'maxAttempts'> & {
+export type CachedQueryConfig = Pick<QueryOptions, 'givenPortOnly' | 'attemptTimeout' | 'socketTimeout' | 'maxRetries'> & {
     ttl: number
 }
 
@@ -28,7 +28,7 @@ export type PlayerInfo = {
     team: number
 }
 
-export type GamedigQueryResult = gamedig.QueryResult & {
+export type GamedigQueryResult = QueryResult & {
     raw: {
         gamevariant?: string;
     }

@@ -4,7 +4,7 @@ import RedisCache, { CachedJSON } from './RedisCache';
 import { CachedQueryConfig, CachedRequestConfig } from './typing';
 import Config from '../config';
 import logger from '../logger';
-import gamedig from 'gamedig';
+import { GameDig, QueryResult } from 'gamedig';
 
 export class CachedHttpClient {
     protected logger: Logger;
@@ -64,7 +64,7 @@ export class CachedGamedigClient {
         this.logger = logger.getChildLogger({ name: 'CachedGamedigClientLogger' });
     }
 
-    public async query(type: gamedig.Type, host: string, port: number, config: CachedQueryConfig): Promise<gamedig.QueryResult> {
+    public async query(type: string, host: string, port: number, config: CachedQueryConfig): Promise<QueryResult> {
         const cacheKey = ['query', type, host, port].join(':');
 
         let cached: CachedJSON | null = null;
@@ -81,7 +81,7 @@ export class CachedGamedigClient {
         } else {
             // If no data was found in cache, fetch it from source
             this.logger.debug('Cache MISS, fetching data from source', cacheKey);
-            data = await gamedig.query({
+            data = await GameDig.query({
                 type,
                 host,
                 port,
