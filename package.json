@@ -55,7 +55,7 @@
     "jsonschema": "1.5.0",
     "moment": "2.30.1",
     "node-cron": "4.2.1",
-    "tslog": "3.3.4",
+    "tslog": "4.10.2",
     "xmlbuilder2": "4.0.3"
   }
 }
