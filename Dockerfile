@@ -1,4 +1,4 @@
-FROM node:24.12.0-bullseye AS base
+FROM node:24.16.0-bullseye AS base
 
 FROM base AS build
 
