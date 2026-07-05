@@ -54,7 +54,7 @@
     "js-yaml": "4.1.1",
     "jsonschema": "1.5.0",
     "moment": "2.30.1",
-    "node-cron": "4.2.1",
+    "node-cron": "4.6.0",
     "tslog": "3.3.4",
     "xmlbuilder2": "4.0.3"
   }
